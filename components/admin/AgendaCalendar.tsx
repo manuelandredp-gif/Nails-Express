@@ -291,22 +291,56 @@ export default function AgendaCalendar({
     <div className="space-y-6">
       {/* Top Controls */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 rounded-[16px] border border-[#ECECEC]">
-        {/* Staff Filter */}
-        <div className="flex items-center gap-3">
-          <Filter className="w-4 h-4 text-gray-500" />
-          <span className="text-xs font-semibold text-gray-700">Manicurista:</span>
-          <select
-            value={selectedStaff}
-            onChange={(e) => setSelectedStaff(e.target.value)}
-            className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-200 outline-none focus:border-primary bg-white"
+        {/* Staff Filter Chips */}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 mr-1">
+            <Filter className="w-3.5 h-3.5 text-gray-400" />
+            <span>Filtrar por:</span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setSelectedStaff("all")}
+            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${
+              selectedStaff === "all"
+                ? "bg-primary text-white shadow-xs"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
           >
-            <option value="all">Todas las manicuristas</option>
-            {staffList.map((st) => (
-              <option key={st.id} value={st.id}>
-                {st.nombre}
-              </option>
-            ))}
-          </select>
+            <span className="w-2 h-2 rounded-full bg-white/80" />
+            <span>Todas</span>
+          </button>
+
+          {staffList.map((st) => {
+            const isSelected = selectedStaff === st.id;
+            return (
+              <button
+                key={st.id}
+                type="button"
+                onClick={() => setSelectedStaff(st.id)}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-2 border ${
+                  isSelected
+                    ? "border-current shadow-xs"
+                    : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                }`}
+                style={
+                  isSelected
+                    ? {
+                        backgroundColor: `${st.color}15`,
+                        color: st.color,
+                        borderColor: st.color,
+                      }
+                    : {}
+                }
+              >
+                <span
+                  className="w-2.5 h-2.5 rounded-full shrink-0"
+                  style={{ backgroundColor: st.color }}
+                />
+                <span>{st.nombre}</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Action Buttons */}

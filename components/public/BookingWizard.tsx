@@ -16,6 +16,11 @@ import {
   MessageCircle,
   AlertCircle,
   Loader2,
+  Sun,
+  Moon,
+  QrCode,
+  Copy,
+  Share2,
 } from "lucide-react";
 import {
   format,
@@ -70,6 +75,7 @@ export default function BookingWizard({
   const [availableSlots, setAvailableSlots] = useState<any[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [isDayClosed, setIsDayClosed] = useState(false);
+  const [timePeriodFilter, setTimePeriodFilter] = useState<"ALL" | "MORNING" | "AFTERNOON">("ALL");
 
   // Step 3: Customer Details
   const [formData, setFormData] = useState({
@@ -93,7 +99,6 @@ export default function BookingWizard({
         setSelectedService(match);
       }
     } else if (services.length > 0 && !selectedService) {
-      // Default to second or first item (e.g. Manicure en Gel)
       const defaultMatch =
         services.find((s) => s.slug === "manicure-en-gel") || services[0];
       setSelectedService(defaultMatch);
@@ -136,8 +141,8 @@ export default function BookingWizard({
   useEffect(() => {
     if (step === 4) {
       confetti({
-        particleCount: 80,
-        spread: 70,
+        particleCount: 100,
+        spread: 80,
         origin: { y: 0.6 },
         colors: ["#5CC6BF", "#E8707A", "#F9E3E3", "#FFD700"],
       });
@@ -212,7 +217,6 @@ export default function BookingWizard({
 
       if (!res.ok) {
         toast.error(data.error || "No se pudo crear la reserva.");
-        // Refresh availability if conflict
         if (res.status === 409) {
           setStep(2);
           const dateStr = format(selectedDate, "yyyy-MM-dd");
@@ -243,26 +247,23 @@ export default function BookingWizard({
     end: endOfMonth(currentMonth),
   });
 
-  const startDayOfWeek = (getDay(startOfMonth(currentMonth)) + 6) % 7; // Monday = 0
+  const startDayOfWeek = (getDay(startOfMonth(currentMonth)) + 6) % 7;
   const emptyDaysAtStart = Array.from({ length: startDayOfWeek });
 
-  // Generate Google Calendar Link
-  const getGoogleCalendarUrl = () => {
-    if (!confirmedBooking) return "#";
-    const start = new Date(confirmedBooking.startAt)
-      .toISOString()
-      .replace(/-|:|\.\d\d\d/g, "");
-    const end = new Date(confirmedBooking.endAt)
-      .toISOString()
-      .replace(/-|:|\.\d\d\d/g, "");
-    const title = encodeURIComponent(
-      `Cita Nails Express: ${confirmedBooking.servicio}`
-    );
-    const details = encodeURIComponent(
-      `Código de reserva: ${confirmedBooking.codigo}\nManicurista: ${confirmedBooking.manicurista}\nPrecio: S/ ${confirmedBooking.precio}`
-    );
-    const location = encodeURIComponent("Av. San Martín 456, Tacna, Perú");
-    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${details}&location=${location}`;
+  // Filter slots by morning / afternoon
+  const filteredSlots = availableSlots.filter((slot) => {
+    if (!slot.available) return false;
+    const hour = parseInt(slot.time.split(":")[0], 10);
+    if (timePeriodFilter === "MORNING") return hour < 14;
+    if (timePeriodFilter === "AFTERNOON") return hour >= 14;
+    return true;
+  });
+
+  // Copy code to clipboard
+  const handleCopyCode = () => {
+    if (!confirmedBooking) return;
+    navigator.clipboard.writeText(confirmedBooking.codigo);
+    toast.success("Código copiado al portapapeles");
   };
 
   // Generate .ICS file download
@@ -304,13 +305,10 @@ END:VCALENDAR`;
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
-      {/* 4-Step Header Stepper (Exactly as images 04, 05, 06) */}
+      {/* 4-Step Header Stepper */}
       <div className="mb-12 max-w-2xl mx-auto">
         <div className="relative flex items-center justify-between">
-          {/* Background Connecting Bar */}
           <div className="absolute top-1/2 left-0 right-0 -translate-y-1/2 h-0.5 bg-gray-200 z-0" />
-
-          {/* Active Progress Bar */}
           <div
             className="absolute top-1/2 left-0 -translate-y-1/2 h-0.5 bg-primary transition-all duration-300 z-0"
             style={{
@@ -325,90 +323,37 @@ END:VCALENDAR`;
             }}
           />
 
-          {/* Step 1 */}
-          <div className="relative z-10 flex flex-col items-center">
-            <div
-              className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-200 ${
-                step >= 1
-                  ? "bg-primary text-white shadow-sm"
-                  : "bg-white border-2 border-gray-300 text-gray-400"
-              }`}
-            >
-              1
+          {/* Stepper items */}
+          {[
+            { num: 1, label: "Servicio" },
+            { num: 2, label: "Fecha y hora" },
+            { num: 3, label: "Tus datos" },
+            { num: 4, label: "Confirmación" },
+          ].map((item) => (
+            <div key={item.num} className="relative z-10 flex flex-col items-center">
+              <div
+                className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-200 ${
+                  step >= item.num
+                    ? "bg-primary text-white shadow-sm ring-4 ring-primary/10"
+                    : "bg-white border-2 border-gray-300 text-gray-400"
+                }`}
+              >
+                {item.num}
+              </div>
+              <span
+                className={`text-xs mt-2 font-medium ${
+                  step === item.num ? "text-primary font-semibold" : "text-[#6B6B6B]"
+                }`}
+              >
+                {item.label}
+              </span>
             </div>
-            <span
-              className={`text-xs mt-2 font-medium ${
-                step === 1 ? "text-primary font-semibold" : "text-[#6B6B6B]"
-              }`}
-            >
-              Servicio
-            </span>
-          </div>
-
-          {/* Step 2 */}
-          <div className="relative z-10 flex flex-col items-center">
-            <div
-              className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-200 ${
-                step >= 2
-                  ? "bg-primary text-white shadow-sm"
-                  : "bg-white border-2 border-gray-300 text-gray-400"
-              }`}
-            >
-              2
-            </div>
-            <span
-              className={`text-xs mt-2 font-medium ${
-                step === 2 ? "text-primary font-semibold" : "text-[#6B6B6B]"
-              }`}
-            >
-              Fecha y hora
-            </span>
-          </div>
-
-          {/* Step 3 */}
-          <div className="relative z-10 flex flex-col items-center">
-            <div
-              className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-200 ${
-                step >= 3
-                  ? "bg-primary text-white shadow-sm"
-                  : "bg-white border-2 border-gray-300 text-gray-400"
-              }`}
-            >
-              3
-            </div>
-            <span
-              className={`text-xs mt-2 font-medium ${
-                step === 3 ? "text-primary font-semibold" : "text-[#6B6B6B]"
-              }`}
-            >
-              Tus datos
-            </span>
-          </div>
-
-          {/* Step 4 */}
-          <div className="relative z-10 flex flex-col items-center">
-            <div
-              className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-200 ${
-                step === 4
-                  ? "bg-primary text-white shadow-sm"
-                  : "bg-white border-2 border-gray-300 text-gray-400"
-              }`}
-            >
-              4
-            </div>
-            <span
-              className={`text-xs mt-2 font-medium ${
-                step === 4 ? "text-primary font-semibold" : "text-[#6B6B6B]"
-              }`}
-            >
-              Confirmación
-            </span>
-          </div>
+          ))}
         </div>
       </div>
 
       {/* ============================================================== */}
-      {/* PASO 1: SELECCIONAR SERVICIO (Reference Image 04)              */}
+      {/* PASO 1: SELECCIONAR SERVICIO                                   */}
       {/* ============================================================== */}
       {step === 1 && (
         <div className="space-y-8 animate-in fade-in-50 duration-300">
@@ -421,7 +366,6 @@ END:VCALENDAR`;
             </p>
           </div>
 
-          {/* 3x2 Grid of service cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {services.map((srv) => {
               const isSelected = selectedService?.id === srv.id;
@@ -430,24 +374,26 @@ END:VCALENDAR`;
                   key={srv.id}
                   type="button"
                   onClick={() => setSelectedService(srv)}
-                  className={`p-6 rounded-[14px] text-center border transition-all duration-200 flex flex-col items-center justify-center min-h-[110px] ${
+                  className={`p-6 rounded-[16px] text-center border transition-all duration-200 flex flex-col items-center justify-center min-h-[115px] group ${
                     isSelected
-                      ? "bg-[#E6F6F4] border-primary text-[#1A1A1A] shadow-sm ring-1 ring-primary"
-                      : "bg-white border-[#ECECEC] text-[#1A1A1A] hover:border-gray-300 hover:bg-gray-50/50"
+                      ? "bg-[#E6F6F4] border-primary text-[#1A1A1A] shadow-sm ring-2 ring-primary/40 transform scale-[1.02]"
+                      : "bg-white border-[#ECECEC] text-[#1A1A1A] hover:border-primary/40 hover:bg-gray-50/50"
                   }`}
                 >
-                  <span className="text-base font-bold leading-snug">
+                  <span className="text-base font-bold leading-snug group-hover:text-primary transition-colors">
                     {srv.nombre}
                   </span>
                   <span className="text-xs text-[#E8707A] font-semibold mt-1">
                     {srv.precioDesde ? "Desde " : ""}S/ {srv.precio.toFixed(0)}
+                  </span>
+                  <span className="text-[0.65rem] text-[#8E8E8E] mt-0.5">
+                    {srv.duracionMinutos} min de atención
                   </span>
                 </button>
               );
             })}
           </div>
 
-          {/* Action Bar */}
           <div className="pt-8 flex items-center justify-between border-t border-gray-100">
             <button
               type="button"
@@ -471,7 +417,7 @@ END:VCALENDAR`;
       )}
 
       {/* ============================================================== */}
-      {/* PASO 2: FECHA Y HORA (Reference Image 05)                     */}
+      {/* PASO 2: FECHA Y HORA (Con filtros de Mañana / Tarde)           */}
       {/* ============================================================== */}
       {step === 2 && (
         <div className="space-y-8 animate-in fade-in-50 duration-300">
@@ -484,11 +430,9 @@ END:VCALENDAR`;
             </p>
           </div>
 
-          {/* Two Columns: Calendar on Left, Timeslots on Right */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
             {/* Left: Monthly Calendar */}
-            <div className="md:col-span-6 bg-white border border-[#ECECEC] rounded-[18px] p-6 shadow-sm">
-              {/* Month Header */}
+            <div className="md:col-span-6 bg-white border border-[#ECECEC] rounded-[20px] p-6 shadow-sm">
               <div className="flex items-center justify-between mb-6">
                 <button
                   type="button"
@@ -511,7 +455,6 @@ END:VCALENDAR`;
                 </button>
               </div>
 
-              {/* Day headers: L M M J V S D */}
               <div className="grid grid-cols-7 text-center text-xs font-semibold text-[#8E8E8E] mb-3">
                 <span>L</span>
                 <span>M</span>
@@ -522,7 +465,6 @@ END:VCALENDAR`;
                 <span>D</span>
               </div>
 
-              {/* Calendar Grid */}
               <div className="grid grid-cols-7 gap-1 text-center">
                 {emptyDaysAtStart.map((_, i) => (
                   <div key={`empty-${i}`} className="h-10" />
@@ -542,7 +484,7 @@ END:VCALENDAR`;
                       onClick={() => setSelectedDate(day)}
                       className={`h-10 w-10 mx-auto rounded-full text-sm flex items-center justify-center transition-all duration-200 ${
                         isSelected
-                          ? "bg-primary text-white font-bold shadow-sm"
+                          ? "bg-primary text-white font-bold shadow-sm ring-4 ring-primary/20"
                           : isDisabled
                           ? "text-gray-300 cursor-not-allowed"
                           : "text-[#1A1A1A] hover:bg-gray-100 font-medium"
@@ -555,15 +497,56 @@ END:VCALENDAR`;
               </div>
             </div>
 
-            {/* Right: Available Hours Grid */}
+            {/* Right: Available Hours Grid with Morning/Afternoon Tabs */}
             <div className="md:col-span-6 space-y-4">
-              <div>
-                <h3 className="text-lg font-bold text-[#1A1A1A]">
-                  Horarios disponibles
-                </h3>
-                <p className="text-xs text-[#6B6B6B] capitalize mt-0.5">
-                  {format(selectedDate, "EEEE d 'de' MMMM", { locale: es })}
-                </p>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-2">
+                <div>
+                  <h3 className="text-lg font-bold text-[#1A1A1A]">
+                    Horarios disponibles
+                  </h3>
+                  <p className="text-xs text-[#6B6B6B] capitalize">
+                    {format(selectedDate, "EEEE d 'de' MMMM", { locale: es })}
+                  </p>
+                </div>
+
+                {/* Morning/Afternoon Chips */}
+                <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-full text-[0.7rem] font-semibold self-start sm:self-auto">
+                  <button
+                    type="button"
+                    onClick={() => setTimePeriodFilter("ALL")}
+                    className={`px-2.5 py-1 rounded-full transition-colors ${
+                      timePeriodFilter === "ALL"
+                        ? "bg-white text-gray-900 shadow-2xs"
+                        : "text-gray-500 hover:text-gray-800"
+                    }`}
+                  >
+                    Todos
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTimePeriodFilter("MORNING")}
+                    className={`px-2.5 py-1 rounded-full flex items-center gap-1 transition-colors ${
+                      timePeriodFilter === "MORNING"
+                        ? "bg-white text-gray-900 shadow-2xs"
+                        : "text-gray-500 hover:text-gray-800"
+                    }`}
+                  >
+                    <Sun className="w-3 h-3 text-amber-500" />
+                    <span>Mañana</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTimePeriodFilter("AFTERNOON")}
+                    className={`px-2.5 py-1 rounded-full flex items-center gap-1 transition-colors ${
+                      timePeriodFilter === "AFTERNOON"
+                        ? "bg-white text-gray-900 shadow-2xs"
+                        : "text-gray-500 hover:text-gray-800"
+                    }`}
+                  >
+                    <Moon className="w-3 h-3 text-indigo-500" />
+                    <span>Tarde</span>
+                  </button>
+                </div>
               </div>
 
               {loadingSlots ? (
@@ -572,40 +555,44 @@ END:VCALENDAR`;
                   <span className="text-xs">Consultando disponibilidad en tiempo real...</span>
                 </div>
               ) : isDayClosed ? (
-                <div className="p-6 bg-gray-50 border border-gray-200 rounded-[14px] text-center text-sm text-[#6B6B6B]">
+                <div className="p-6 bg-gray-50 border border-gray-200 rounded-[16px] text-center text-sm text-[#6B6B6B]">
                   El salón se encuentra cerrado este día. Por favor elige otra fecha.
                 </div>
-              ) : availableSlots.filter((s) => s.available).length === 0 ? (
-                <div className="p-6 bg-gray-50 border border-gray-200 rounded-[14px] text-center text-sm text-[#6B6B6B]">
-                  No quedan horarios libres para este día. Por favor selecciona otra fecha.
+              ) : filteredSlots.length === 0 ? (
+                <div className="p-6 bg-gray-50 border border-gray-200 rounded-[16px] text-center text-sm text-[#6B6B6B]">
+                  No quedan horarios libres en esta franja. Por favor selecciona otro filtro o fecha.
                 </div>
               ) : (
                 <div className="grid grid-cols-3 gap-3">
-                  {availableSlots
-                    .filter((s) => s.available)
-                    .map((slot) => {
-                      const isSelected = selectedSlot === slot.time;
-                      return (
-                        <button
-                          key={slot.time}
-                          type="button"
-                          onClick={() => setSelectedSlot(slot.time)}
-                          className={`py-3 px-2 rounded-[12px] text-sm font-semibold border transition-all duration-200 ${
-                            isSelected
-                              ? "bg-[#E6F6F4] border-primary text-[#1A1A1A] ring-1 ring-primary shadow-sm"
-                              : "bg-white border-[#ECECEC] text-[#1A1A1A] hover:border-gray-300 hover:bg-gray-50/50"
-                          }`}
-                        >
-                          {slot.time}
-                        </button>
-                      );
-                    })}
+                  {filteredSlots.map((slot) => {
+                    const isSelected = selectedSlot === slot.time;
+                    const isPopular = ["11:00", "16:00", "17:00", "18:00"].includes(slot.time);
+
+                    return (
+                      <button
+                        key={slot.time}
+                        type="button"
+                        onClick={() => setSelectedSlot(slot.time)}
+                        className={`py-3 px-2 rounded-[14px] text-sm font-semibold border transition-all duration-200 relative group ${
+                          isSelected
+                            ? "bg-[#E6F6F4] border-primary text-[#1A1A1A] ring-2 ring-primary/40 shadow-sm"
+                            : "bg-white border-[#ECECEC] text-[#1A1A1A] hover:border-primary/40 hover:bg-gray-50/50"
+                        }`}
+                      >
+                        {slot.time}
+                        {isPopular && !isSelected && (
+                          <span className="absolute -top-1.5 -right-1 text-[0.55rem] font-bold px-1.5 py-0.2 bg-[#FAF3F3] text-[#E8707A] rounded-full border border-[#F2DADA]">
+                            Popular
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
           </div>
 
-          {/* Action Bar */}
           <div className="pt-8 flex items-center justify-between border-t border-gray-100">
             <button
               type="button"
@@ -629,7 +616,7 @@ END:VCALENDAR`;
       )}
 
       {/* ============================================================== */}
-      {/* PASO 3: TUS DATOS (Mismo lenguaje visual exacto)               */}
+      {/* PASO 3: TUS DATOS                                              */}
       {/* ============================================================== */}
       {step === 3 && (
         <form
@@ -645,8 +632,7 @@ END:VCALENDAR`;
             </p>
           </div>
 
-          {/* Summary Strip */}
-          <div className="bg-[#FAF3F3] border border-[#F2DADA] rounded-[14px] p-4 flex flex-wrap items-center justify-between gap-4">
+          <div className="bg-[#FAF3F3] border border-[#F2DADA] rounded-[16px] p-4 flex flex-wrap items-center justify-between gap-4 shadow-2xs">
             <div>
               <span className="text-xs text-[#8E8E8E] block">Servicio elegido:</span>
               <span className="text-sm font-bold text-[#1A1A1A]">
@@ -660,14 +646,13 @@ END:VCALENDAR`;
               </span>
             </div>
             <div>
-              <span className="text-xs text-[#8E8E8E] block">Total:</span>
+              <span className="text-xs text-[#8E8E8E] block">Total estimado:</span>
               <span className="text-sm font-bold text-[#E8707A]">
                 S/ {selectedService?.precio.toFixed(0)}
               </span>
             </div>
           </div>
 
-          {/* Form fields with fine 1px borders */}
           <div className="space-y-4">
             <div>
               <label
@@ -749,7 +734,6 @@ END:VCALENDAR`;
               />
             </div>
 
-            {/* Privacy acceptance */}
             <div className="pt-2">
               <label className="flex items-start gap-3 cursor-pointer">
                 <input
@@ -767,7 +751,6 @@ END:VCALENDAR`;
             </div>
           </div>
 
-          {/* Action Bar */}
           <div className="pt-8 flex items-center justify-between border-t border-gray-100">
             <button
               type="button"
@@ -799,12 +782,11 @@ END:VCALENDAR`;
       )}
 
       {/* ============================================================== */}
-      {/* PASO 4: CONFIRMACIÓN DE CITA (Reference Image 06)              */}
+      {/* PASO 4: CONFIRMACIÓN DE CITA (Con Boutique Ticket Pass & QR)    */}
       {/* ============================================================== */}
       {step === 4 && confirmedBooking && (
         <div className="text-center space-y-8 animate-in zoom-in-95 duration-400">
-          {/* Calendar Check Icon */}
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[#E6F6F4] text-primary mx-auto mb-2 border border-[#C5EDE8]">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[#E6F6F4] text-primary mx-auto mb-2 border border-[#C5EDE8] shadow-sm">
             <CalendarIcon className="w-10 h-10" strokeWidth={1.5} />
           </div>
 
@@ -813,60 +795,97 @@ END:VCALENDAR`;
               ¡Cita confirmada!
             </h1>
             <p className="mt-2 text-base text-[#6B6B6B]">
-              Tu cita ha sido reservada con éxito. Código:{" "}
-              <strong className="text-primary font-bold">
-                {confirmedBooking.codigo}
-              </strong>
+              Tu cita ha sido reservada con éxito.
             </p>
           </div>
 
-          {/* Blush Pink 3-Column Strip (Matching Image 06 exactly) */}
-          <div className="bg-[#FBEDED] rounded-[18px] p-6 sm:p-8 border border-[#F5D8D8] grid grid-cols-1 md:grid-cols-3 gap-6 text-left items-center">
-            {/* Column 1: Date & Time */}
-            <div className="flex items-center space-x-3.5">
-              <div className="w-10 h-10 rounded-full bg-white/90 text-[#1A1A1A] flex items-center justify-center shrink-0 shadow-xs">
-                <CalendarIcon className="w-5 h-5 text-[#1A1A1A]" strokeWidth={1.5} />
-              </div>
+          {/* Boutique Ticket Pass Card */}
+          <div className="max-w-2xl mx-auto bg-white rounded-[22px] border border-[#ECECEC] shadow-hover overflow-hidden text-left relative">
+            {/* Ticket Header */}
+            <div className="bg-[#FAF3F3] p-5 sm:p-6 border-b border-[#F2DADA] flex items-center justify-between">
               <div>
-                <p className="text-sm font-bold text-[#1A1A1A] capitalize">
-                  {format(new Date(confirmedBooking.startAt), "EEEE d 'de' MMMM", {
-                    locale: es,
-                  })}
-                </p>
-                <p className="text-xs text-[#6B6B6B]">
-                  {format(new Date(confirmedBooking.startAt), "HH:mm")} hrs
-                </p>
+                <span className="text-[0.65rem] font-bold uppercase tracking-widest text-[#E8707A] block">
+                  PASE DIGITAL DE SALÓN
+                </span>
+                <span className="text-xl font-extrabold text-[#1A1A1A] tracking-tight">
+                  Nails Express Studio
+                </span>
+              </div>
+              <div className="text-right">
+                <span className="text-[0.65rem] text-gray-500 block uppercase">Código</span>
+                <button
+                  onClick={handleCopyCode}
+                  className="font-mono font-bold text-primary hover:underline inline-flex items-center gap-1 text-sm bg-white px-2.5 py-1 rounded-md border border-primary/20"
+                  title="Copiar código"
+                >
+                  <span>{confirmedBooking.codigo}</span>
+                  <Copy className="w-3 h-3" />
+                </button>
               </div>
             </div>
 
-            {/* Column 2: Service & Price */}
-            <div className="flex items-center space-x-3.5 border-y md:border-y-0 md:border-x border-[#F0D0D0] py-4 md:py-0 md:px-4">
-              <div className="w-10 h-10 rounded-full bg-white/90 text-[#1A1A1A] flex items-center justify-center shrink-0 shadow-xs">
-                <Scissors className="w-5 h-5 text-[#1A1A1A]" strokeWidth={1.5} />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-[#1A1A1A]">
-                  {confirmedBooking.servicio}
-                </p>
-                <p className="text-xs text-[#E8707A] font-semibold">
-                  S/ {confirmedBooking.precio}
-                </p>
-              </div>
-            </div>
+            {/* Ticket Details & Real-time QR */}
+            <div className="p-6 grid grid-cols-1 sm:grid-cols-12 gap-6 items-center">
+              <div className="sm:col-span-8 space-y-4 text-xs">
+                <div>
+                  <span className="text-[#8E8E8E] block uppercase font-semibold text-[0.65rem]">
+                    Servicio
+                  </span>
+                  <p className="text-base font-bold text-[#1A1A1A]">
+                    {confirmedBooking.servicio}
+                  </p>
+                  <p className="text-xs text-[#E8707A] font-bold">
+                    S/ {confirmedBooking.precio}
+                  </p>
+                </div>
 
-            {/* Column 3: Location */}
-            <div className="flex items-center space-x-3.5 md:pl-2">
-              <div className="w-10 h-10 rounded-full bg-white/90 text-[#1A1A1A] flex items-center justify-center shrink-0 shadow-xs">
-                <MapPin className="w-5 h-5 text-[#1A1A1A]" strokeWidth={1.5} />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-[#8E8E8E] block uppercase font-semibold text-[0.65rem]">
+                      Fecha y Hora
+                    </span>
+                    <p className="font-bold text-[#1A1A1A] capitalize text-xs">
+                      {format(new Date(confirmedBooking.startAt), "EEE d 'de' MMMM", {
+                        locale: es,
+                      })}
+                    </p>
+                    <p className="text-gray-600 font-semibold">
+                      {format(new Date(confirmedBooking.startAt), "HH:mm")} hrs
+                    </p>
+                  </div>
+
+                  <div>
+                    <span className="text-[#8E8E8E] block uppercase font-semibold text-[0.65rem]">
+                      Manicurista
+                    </span>
+                    <p className="font-bold text-[#1A1A1A] text-xs">
+                      {confirmedBooking.manicurista}
+                    </p>
+                    <p className="text-gray-500 text-[0.7rem]">Estilista asignada</p>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-gray-100 flex items-center gap-1.5 text-gray-600">
+                  <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
+                  <span className="truncate">Av. San Martín 456, Tacna, Perú</span>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-bold text-[#1A1A1A]">Nails Express</p>
-                <p className="text-xs text-[#6B6B6B]">Av. San Martín 456, Tacna</p>
+
+              {/* QR Code Column */}
+              <div className="sm:col-span-4 flex flex-col items-center justify-center p-3 bg-gray-50 rounded-[16px] border border-gray-100 text-center">
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=https://nailsexpress.com/mis-citas?code=${confirmedBooking.codigo}`}
+                  alt={`QR Cita ${confirmedBooking.codigo}`}
+                  className="w-24 h-24 rounded-lg bg-white p-1.5 shadow-2xs"
+                />
+                <span className="text-[0.65rem] text-gray-400 mt-2 font-medium">
+                  Escanea para consultar o modificar
+                </span>
               </div>
             </div>
           </div>
 
-          {/* Action Buttons: Exact styling of Image 06 */}
+          {/* Action Buttons */}
           <div className="pt-4 flex flex-wrap items-center justify-center gap-4">
             <button
               type="button"
@@ -896,7 +915,7 @@ END:VCALENDAR`;
               )}`}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center text-xs text-[#6B6B6B] hover:text-primary transition-colors gap-1.5"
+              className="inline-flex items-center text-xs text-[#6B6B6B] hover:text-primary transition-colors gap-1.5 font-medium"
             >
               <MessageCircle className="w-3.5 h-3.5 text-primary" />
               <span>Enviar confirmación por WhatsApp al estudio</span>

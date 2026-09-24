@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Star, Clock, CheckCircle2 } from "lucide-react";
+import PopularColorsPicker from "@/components/public/PopularColorsPicker";
 import type { Metadata } from "next";
 
 export async function generateMetadata({
@@ -156,22 +157,11 @@ export default async function ServiceDetailPage({
           </div>
         </div>
 
-        {/* Popular Colors Section (Matching Image 03) */}
-        <div className="mt-14 pt-8 border-t border-gray-100">
-          <h2 className="text-lg font-bold text-[#1A1A1A] mb-4">
-            Colores populares
-          </h2>
-          <div className="flex flex-wrap items-center gap-3">
-            {popularColors.map((colorHex, i) => (
-              <div
-                key={i}
-                className="w-9 h-9 rounded-full shadow-xs border border-black/10 hover:scale-110 transition-transform cursor-pointer"
-                style={{ backgroundColor: colorHex }}
-                title={`Tono ${colorHex}`}
-              />
-            ))}
-          </div>
-        </div>
+        {/* Popular Colors Section (Interactive) */}
+        <PopularColorsPicker
+          colors={popularColors}
+          serviceSlug={service.slug}
+        />
       </div>
     </div>
   );
