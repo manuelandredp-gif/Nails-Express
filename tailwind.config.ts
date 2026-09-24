@@ -40,6 +40,8 @@ const config: Config = {
       fontFamily: {
         sans: ["var(--font-sans)", "Plus Jakarta Sans", "Inter", "system-ui", "sans-serif"],
         display: ["var(--font-sans)", "Plus Jakarta Sans", "Inter", "system-ui", "sans-serif"],
+        serif: ["var(--font-serif)", "Playfair Display", "Georgia", "serif"],
+        script: ["var(--font-script)", "Alex Brush", "cursive"],
       },
       borderRadius: {
         card: "14px",
