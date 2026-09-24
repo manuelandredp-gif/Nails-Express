@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createBooking } from "@/lib/booking";
+import { bookingService } from "@/lib/application/booking.service";
 import { z } from "zod";
 
 const bookingSchema = z.object({
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const booking = await createBooking(validation.data);
+    const booking = await bookingService.createBooking(validation.data);
 
     return NextResponse.json(
       {

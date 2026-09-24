@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { notifications } from "@/lib/notifications";
+import { notifications } from "@/lib/application/notifications.service";
 import { addHours, subMinutes, addMinutes } from "date-fns";
 
 export const dynamic = "force-dynamic";

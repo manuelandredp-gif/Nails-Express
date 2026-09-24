@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { normalizePhone } from "@/lib/booking";
+import { normalizePhone } from "@/lib/application/booking.service";
 import { differenceInHours, addMinutes } from "date-fns";
 
 export const dynamic = "force-dynamic";

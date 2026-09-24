@@ -1,4 +1,4 @@
-import { prisma } from "./db";
+import { prisma } from "../db";
 import { parseISO, addMinutes, format, isBefore, isAfter, startOfDay, endOfDay } from "date-fns";
 import { toZonedTime, fromZonedTime } from "date-fns-tz";
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAdminSession } from "@/lib/auth";
-import { createBooking } from "@/lib/booking";
+import { bookingService } from "@/lib/application/booking.service";
 
 export const dynamic = "force-dynamic";
 
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
       origen = "ADMIN",
     } = body;
 
-    const appointment = await createBooking({
+    const appointment = await bookingService.createBooking({
       serviceId,
       startAt,
       staffId,
