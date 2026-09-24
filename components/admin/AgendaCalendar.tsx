@@ -6,26 +6,12 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import esLocale from "@fullcalendar/core/locales/es";
-import {
-  Calendar as CalendarIcon,
-  Clock,
-  User,
-  Scissors,
-  Phone,
-  MessageCircle,
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-  Plus,
-  Loader2,
-  X,
-  History,
-  FileText,
-  Filter,
-} from "lucide-react";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import { Clock, Plus } from "lucide-react";
 import { toast } from "sonner";
+import AgendaStaffFilter from "./agenda/AgendaStaffFilter";
+import AppointmentDetailDrawer from "./agenda/AppointmentDetailDrawer";
+import ManualBookingModal from "./agenda/ManualBookingModal";
+import TimeBlockModal from "./agenda/TimeBlockModal";
 
 interface StaffItem {
   id: string;
@@ -75,6 +61,7 @@ export default function AgendaCalendar({
 
   // Time Block Modal
   const [blockModalOpen, setBlockModalOpen] = useState(false);
+  const [blocking, setBlocking] = useState(false);
   const [blockForm, setBlockForm] = useState({
     staffId: "",
     startAt: "",
@@ -133,7 +120,6 @@ export default function AgendaCalendar({
 
       setEvents([...appEvents, ...blockEvents]);
     } catch (err) {
-      console.error("Error loading events:", err);
       toast.error("Error al sincronizar la agenda.");
     } finally {
       setLoading(false);
@@ -238,36 +224,40 @@ export default function AgendaCalendar({
   const handleCreateAppointment = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreating(true);
-
     try {
       const res = await fetch("/api/admin/appointments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...newForm,
-          origen: "ADMIN",
-        }),
+        body: JSON.stringify(newForm),
       });
 
       const data = await res.json();
-
       if (!res.ok) {
-        toast.error(data.error || "Conflicto al agendar cita.");
+        toast.error(data.error || "Error al crear la cita.");
       } else {
-        toast.success("Cita agendada correctamente.");
+        toast.success("Cita agendada exitosamente.");
         setNewModalOpen(false);
+        setNewForm({
+          nombre: "",
+          celular: "",
+          serviceId: servicesList[0]?.id || "",
+          staffId: staffList[0]?.id || "",
+          startAt: "",
+          notasCliente: "",
+        });
         loadCalendarData();
       }
     } catch (err) {
-      toast.error("Error al agendar cita.");
+      toast.error("Error al registrar cita.");
     } finally {
       setCreating(false);
     }
   };
 
-  // Create timeblock
+  // Create time block
   const handleCreateBlock = async (e: React.FormEvent) => {
     e.preventDefault();
+    setBlocking(true);
     try {
       const res = await fetch("/api/admin/timeblocks", {
         method: "POST",
@@ -275,75 +265,31 @@ export default function AgendaCalendar({
         body: JSON.stringify(blockForm),
       });
 
+      const data = await res.json();
       if (!res.ok) {
-        toast.error("Error al crear bloqueo.");
+        toast.error(data.error || "Error al bloquear horario.");
       } else {
-        toast.success("Bloqueo de horario creado.");
+        toast.success("Horario bloqueado con éxito.");
         setBlockModalOpen(false);
         loadCalendarData();
       }
     } catch (err) {
-      toast.error("Error al crear bloqueo.");
+      toast.error("Error al guardar bloqueo.");
+    } finally {
+      setBlocking(false);
     }
   };
 
   return (
     <div className="space-y-6">
-      {/* Top Controls */}
+      {/* Top Controls with Staff Filter & Actions */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 rounded-[16px] border border-[#ECECEC]">
-        {/* Staff Filter Chips */}
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 mr-1">
-            <Filter className="w-3.5 h-3.5 text-gray-400" />
-            <span>Filtrar por:</span>
-          </div>
+        <AgendaStaffFilter
+          staffList={staffList}
+          selectedStaff={selectedStaff}
+          onSelectStaff={setSelectedStaff}
+        />
 
-          <button
-            type="button"
-            onClick={() => setSelectedStaff("all")}
-            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${
-              selectedStaff === "all"
-                ? "bg-primary text-white shadow-xs"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
-          >
-            <span className="w-2 h-2 rounded-full bg-white/80" />
-            <span>Todas</span>
-          </button>
-
-          {staffList.map((st) => {
-            const isSelected = selectedStaff === st.id;
-            return (
-              <button
-                key={st.id}
-                type="button"
-                onClick={() => setSelectedStaff(st.id)}
-                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-2 border ${
-                  isSelected
-                    ? "border-current shadow-xs"
-                    : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
-                }`}
-                style={
-                  isSelected
-                    ? {
-                        backgroundColor: `${st.color}15`,
-                        color: st.color,
-                        borderColor: st.color,
-                      }
-                    : {}
-                }
-              >
-                <span
-                  className="w-2.5 h-2.5 rounded-full shrink-0"
-                  style={{ backgroundColor: st.color }}
-                />
-                <span>{st.nombre}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Action Buttons */}
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => setBlockModalOpen(true)}
@@ -389,470 +335,40 @@ export default function AgendaCalendar({
         />
       </div>
 
-      {/* Slide-over Drawer for Selected Appointment */}
-      {drawerOpen && selectedApp && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
-          <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
-            onClick={() => setDrawerOpen(false)}
-          />
+      {/* Slide-over Drawer */}
+      <AppointmentDetailDrawer
+        isOpen={drawerOpen}
+        appointment={selectedApp}
+        onClose={() => setDrawerOpen(false)}
+        internalNotes={internalNotes}
+        onChangeInternalNotes={setInternalNotes}
+        onSaveNotes={handleSaveNotes}
+        onStatusChange={handleStatusChange}
+        savingStatus={savingStatus}
+      />
 
-          <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-            <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col justify-between">
-              {/* Header */}
-              <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-                <div>
-                  <span className="text-xs text-[#8E8E8E] font-mono">
-                    {selectedApp.codigo}
-                  </span>
-                  <h3 className="text-xl font-bold text-[#1A1A1A]">
-                    Detalle de la Cita
-                  </h3>
-                </div>
-                <button
-                  onClick={() => setDrawerOpen(false)}
-                  className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+      {/* Manual Booking Modal */}
+      <ManualBookingModal
+        isOpen={newModalOpen}
+        onClose={() => setNewModalOpen(false)}
+        creating={creating}
+        onSubmit={handleCreateAppointment}
+        form={newForm}
+        onChangeForm={setNewForm}
+        servicesList={servicesList}
+        staffList={staffList}
+      />
 
-              {/* Body */}
-              <div className="p-6 space-y-6 overflow-y-auto flex-1 text-sm">
-                {/* Status Badge */}
-                <div className="flex items-center justify-between bg-gray-50 p-3 rounded-[12px]">
-                  <span className="text-xs font-semibold text-gray-500">
-                    Estado actual:
-                  </span>
-                  <span
-                    className={`text-xs font-bold px-3 py-1 rounded-full ${
-                      selectedApp.estado === "CONFIRMADA"
-                        ? "bg-green-100 text-green-700"
-                        : selectedApp.estado === "COMPLETADA"
-                        ? "bg-blue-100 text-blue-700"
-                        : selectedApp.estado === "CANCELADA"
-                        ? "bg-red-100 text-red-700"
-                        : "bg-gray-200 text-gray-700"
-                    }`}
-                  >
-                    {selectedApp.estado}
-                  </span>
-                </div>
-
-                {/* Customer Info */}
-                <div className="space-y-3">
-                  <h4 className="text-xs font-bold text-[#1A1A1A] uppercase tracking-wider">
-                    Cliente
-                  </h4>
-                  <div className="bg-white border border-[#ECECEC] p-4 rounded-[12px] space-y-2">
-                    <p className="font-bold text-base text-[#1A1A1A]">
-                      {selectedApp.customer.nombre}
-                    </p>
-                    <p className="text-xs text-gray-600 flex items-center gap-2">
-                      <Phone className="w-3.5 h-3.5 text-primary" />
-                      <span>{selectedApp.customer.celular}</span>
-                    </p>
-                    {selectedApp.customer.email && (
-                      <p className="text-xs text-gray-500">
-                        {selectedApp.customer.email}
-                      </p>
-                    )}
-                    {/* Quick WhatsApp Action */}
-                    <div className="pt-2">
-                      <a
-                        href={`https://wa.me/${selectedApp.customer.celular.replace(
-                          /[^\d]/g,
-                          ""
-                        )}?text=${encodeURIComponent(
-                          `¡Hola ${selectedApp.customer.nombre}! Te escribimos de Nails Express respecto a tu cita.`
-                        )}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="btn-primary text-xs py-1.5 px-3 inline-flex items-center gap-1.5"
-                      >
-                        <MessageCircle className="w-3.5 h-3.5" />
-                        <span>Abrir WhatsApp del cliente</span>
-                      </a>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Service & Staff */}
-                <div className="space-y-3">
-                  <h4 className="text-xs font-bold text-[#1A1A1A] uppercase tracking-wider">
-                    Servicio & Manicurista
-                  </h4>
-                  <div className="bg-white border border-[#ECECEC] p-4 rounded-[12px] space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-gray-800">
-                        {selectedApp.service.nombre}
-                      </span>
-                      <span className="font-bold text-[#E8707A]">
-                        S/ {selectedApp.precio}
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-500">
-                      Manicurista:{" "}
-                      <strong className="text-gray-800">
-                        {selectedApp.staff.nombre}
-                      </strong>
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Horario: {format(new Date(selectedApp.startAt), "HH:mm")} -{" "}
-                      {format(new Date(selectedApp.endAt), "HH:mm")} hrs (
-                      {format(new Date(selectedApp.startAt), "d 'de' MMMM", {
-                        locale: es,
-                      })}
-                      )
-                    </p>
-                  </div>
-                </div>
-
-                {/* Status Quick Actions */}
-                <div className="space-y-2">
-                  <h4 className="text-xs font-bold text-[#1A1A1A] uppercase tracking-wider">
-                    Cambiar Estado
-                  </h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={() => handleStatusChange("COMPLETADA")}
-                      disabled={savingStatus}
-                      className="py-2 px-3 text-xs font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg border border-emerald-200 transition-colors"
-                    >
-                      ✔ Completada
-                    </button>
-                    <button
-                      onClick={() => handleStatusChange("NO_ASISTIO")}
-                      disabled={savingStatus}
-                      className="py-2 px-3 text-xs font-semibold bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg border border-amber-200 transition-colors"
-                    >
-                      ⚠ No asistió
-                    </button>
-                    <button
-                      onClick={() => handleStatusChange("CONFIRMADA")}
-                      disabled={savingStatus}
-                      className="py-2 px-3 text-xs font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg border border-blue-200 transition-colors"
-                    >
-                      Confirmar
-                    </button>
-                    <button
-                      onClick={() => handleStatusChange("CANCELADA")}
-                      disabled={savingStatus}
-                      className="py-2 px-3 text-xs font-semibold bg-red-50 text-red-700 hover:bg-red-100 rounded-lg border border-red-200 transition-colors"
-                    >
-                      ✕ Cancelar
-                    </button>
-                  </div>
-                </div>
-
-                {/* Internal Notes */}
-                <div className="space-y-2">
-                  <h4 className="text-xs font-bold text-[#1A1A1A] uppercase tracking-wider">
-                    Notas Internas
-                  </h4>
-                  <textarea
-                    rows={2}
-                    value={internalNotes}
-                    onChange={(e) => setInternalNotes(e.target.value)}
-                    placeholder="Preferencias de diseño, alergias, o detalles..."
-                    className="w-full p-2.5 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary resize-none"
-                  />
-                  <button
-                    onClick={handleSaveNotes}
-                    className="text-xs font-semibold text-primary hover:underline"
-                  >
-                    Guardar nota
-                  </button>
-                </div>
-
-                {/* Audit Logs */}
-                {selectedApp.logs && selectedApp.logs.length > 0 && (
-                  <div className="space-y-2 pt-2 border-t border-gray-100">
-                    <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-                      <History className="w-3.5 h-3.5" />
-                      <span>Historial de cambios</span>
-                    </h4>
-                    <div className="space-y-1.5 max-h-36 overflow-y-auto">
-                      {selectedApp.logs.map((log: any) => (
-                        <div
-                          key={log.id}
-                          className="text-[0.7rem] text-gray-500 bg-gray-50 p-2 rounded"
-                        >
-                          <span className="font-semibold text-gray-700">
-                            {log.accion}:
-                          </span>{" "}
-                          {log.detalle}{" "}
-                          <span className="text-gray-400 block text-[0.65rem] mt-0.5">
-                            Por {log.realizadoPor} •{" "}
-                            {format(new Date(log.fecha), "dd/MM HH:mm")}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Footer */}
-              <div className="p-4 border-t border-gray-100 bg-gray-50">
-                <button
-                  onClick={() => setDrawerOpen(false)}
-                  className="w-full btn-outline text-xs py-2.5 justify-center"
-                >
-                  Cerrar
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal: Agendar Nueva Cita Manual */}
-      {newModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-[18px] max-w-lg w-full p-6 space-y-5 animate-in zoom-in-95 shadow-xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b pb-3">
-              <h3 className="text-lg font-bold text-[#1A1A1A]">
-                Agendar Cita Manual
-              </h3>
-              <button
-                onClick={() => setNewModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateAppointment} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Nombre de la clienta *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={newForm.nombre}
-                  onChange={(e) =>
-                    setNewForm({ ...newForm, nombre: e.target.value })
-                  }
-                  placeholder="Ej. Sofía Vargas"
-                  className="w-full px-3 py-2 text-xs border rounded-lg outline-none focus:border-primary"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">
-                    WhatsApp / Celular *
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    value={newForm.celular}
-                    onChange={(e) =>
-                      setNewForm({ ...newForm, celular: e.target.value })
-                    }
-                    placeholder="Ej. 952 111 222"
-                    className="w-full px-3 py-2 text-xs border rounded-lg outline-none focus:border-primary"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">
-                    Servicio *
-                  </label>
-                  <select
-                    value={newForm.serviceId}
-                    onChange={(e) =>
-                      setNewForm({ ...newForm, serviceId: e.target.value })
-                    }
-                    className="w-full px-3 py-2 text-xs border rounded-lg outline-none focus:border-primary bg-white"
-                  >
-                    {servicesList.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.nombre} (S/ {s.precio})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">
-                    Manicurista *
-                  </label>
-                  <select
-                    value={newForm.staffId}
-                    onChange={(e) =>
-                      setNewForm({ ...newForm, staffId: e.target.value })
-                    }
-                    className="w-full px-3 py-2 text-xs border rounded-lg outline-none focus:border-primary bg-white"
-                  >
-                    {staffList.map((st) => (
-                      <option key={st.id} value={st.id}>
-                        {st.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">
-                    Fecha y Hora *
-                  </label>
-                  <input
-                    type="datetime-local"
-                    required
-                    value={newForm.startAt}
-                    onChange={(e) =>
-                      setNewForm({ ...newForm, startAt: e.target.value })
-                    }
-                    className="w-full px-3 py-2 text-xs border rounded-lg outline-none focus:border-primary"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Notas de la cita
-                </label>
-                <textarea
-                  rows={2}
-                  value={newForm.notasCliente}
-                  onChange={(e) =>
-                    setNewForm({ ...newForm, notasCliente: e.target.value })
-                  }
-                  placeholder="Detalles sobre diseño o atención"
-                  className="w-full px-3 py-2 text-xs border rounded-lg outline-none focus:border-primary resize-none"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setNewModalOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-btn"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={creating}
-                  className="btn-primary text-xs py-2 px-6"
-                >
-                  {creating ? "Guardando..." : "Guardar Cita"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Modal: Bloquear Horario */}
-      {blockModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-[18px] max-w-md w-full p-6 space-y-4 animate-in zoom-in-95 shadow-xl">
-            <div className="flex items-center justify-between border-b pb-3">
-              <h3 className="text-lg font-bold text-[#1A1A1A]">
-                Bloquear Horario
-              </h3>
-              <button
-                onClick={() => setBlockModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateBlock} className="space-y-3">
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Afecta a:
-                </label>
-                <select
-                  value={blockForm.staffId}
-                  onChange={(e) =>
-                    setBlockForm({ ...blockForm, staffId: e.target.value })
-                  }
-                  className="w-full px-3 py-2 text-xs border rounded-lg outline-none focus:border-primary bg-white"
-                >
-                  <option value="">Todo el local (Cerrado)</option>
-                  {staffList.map((st) => (
-                    <option key={st.id} value={st.id}>
-                      Solo {st.nombre}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">
-                    Inicio *
-                  </label>
-                  <input
-                    type="datetime-local"
-                    required
-                    value={blockForm.startAt}
-                    onChange={(e) =>
-                      setBlockForm({ ...blockForm, startAt: e.target.value })
-                    }
-                    className="w-full px-3 py-2 text-xs border rounded-lg outline-none focus:border-primary"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">
-                    Fin *
-                  </label>
-                  <input
-                    type="datetime-local"
-                    required
-                    value={blockForm.endAt}
-                    onChange={(e) =>
-                      setBlockForm({ ...blockForm, endAt: e.target.value })
-                    }
-                    className="w-full px-3 py-2 text-xs border rounded-lg outline-none focus:border-primary"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Motivo *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={blockForm.motivo}
-                  onChange={(e) =>
-                    setBlockForm({ ...blockForm, motivo: e.target.value })
-                  }
-                  placeholder="Ej. Almuerzo, Feriado, Capacitación"
-                  className="w-full px-3 py-2 text-xs border rounded-lg outline-none focus:border-primary"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setBlockModalOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-btn"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="btn-primary text-xs py-2 px-6"
-                >
-                  Guardar Bloqueo
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* Time Block Modal */}
+      <TimeBlockModal
+        isOpen={blockModalOpen}
+        onClose={() => setBlockModalOpen(false)}
+        staffList={staffList}
+        form={blockForm}
+        onChangeForm={setBlockForm}
+        onSubmit={handleCreateBlock}
+        submitting={blocking}
+      />
     </div>
   );
 }

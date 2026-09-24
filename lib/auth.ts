@@ -1,13 +1,8 @@
 import { cookies } from "next/headers";
 import { prisma } from "./db";
+import { JwtService, SessionPayload } from "./infrastructure/security/jwt.service";
 
-export interface AdminSession {
-  userId: string;
-  email: string;
-  nombre: string;
-  rol: "OWNER" | "ADMIN" | "RECEPCION" | "MANICURISTA";
-  staffId?: string | null;
-}
+export type AdminSession = Omit<SessionPayload, "exp">;
 
 const COOKIE_NAME = "nails_admin_session";
 
@@ -16,28 +11,23 @@ export async function getAdminSession(): Promise<AdminSession | null> {
   const token = cookieStore.get(COOKIE_NAME)?.value;
   if (!token) return null;
 
-  try {
-    const decoded = JSON.parse(
-      Buffer.from(token, "base64").toString("utf-8")
-    ) as AdminSession;
+  const verified = JwtService.verify(token);
+  if (!verified) return null;
 
-    // Verify user is active in DB
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-    });
+  // Verify user still exists and is active in database
+  const user = await prisma.user.findUnique({
+    where: { id: verified.userId },
+  });
 
-    if (!user || !user.activo) return null;
+  if (!user || !user.activo) return null;
 
-    return {
-      userId: user.id,
-      email: user.email,
-      nombre: user.nombre,
-      rol: user.rol as any,
-      staffId: user.staffId,
-    };
-  } catch (err) {
-    return null;
-  }
+  return {
+    userId: user.id,
+    email: user.email,
+    nombre: user.nombre,
+    rol: user.rol as any,
+    staffId: user.staffId,
+  };
 }
 
 export async function setAdminSession(user: {
@@ -47,15 +37,14 @@ export async function setAdminSession(user: {
   rol: string;
   staffId?: string | null;
 }) {
-  const sessionData: AdminSession = {
+  const token = JwtService.sign({
     userId: user.id,
     email: user.email,
     nombre: user.nombre,
     rol: user.rol as any,
     staffId: user.staffId,
-  };
+  });
 
-  const token = Buffer.from(JSON.stringify(sessionData)).toString("base64");
   const cookieStore = cookies();
   cookieStore.set(COOKIE_NAME, token, {
     httpOnly: true,

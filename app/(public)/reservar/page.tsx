@@ -17,21 +17,35 @@ export default async function ReservarPage({
 }: {
   searchParams: { service?: string };
 }) {
-  const services = await prisma.service.findMany({
-    where: { activo: true },
-    select: {
-      id: true,
-      slug: true,
-      nombre: true,
-      precio: true,
-      precioDesde: true,
-      duracionMinutos: true,
-      category: {
-        select: { nombre: true },
+  const [services, staffList, settings] = await Promise.all([
+    prisma.service.findMany({
+      where: { activo: true },
+      select: {
+        id: true,
+        slug: true,
+        nombre: true,
+        descripcionCorta: true,
+        imagenPrincipal: true,
+        precio: true,
+        duracionMinutos: true,
+        category: {
+          select: { id: true, nombre: true },
+        },
       },
-    },
-    orderBy: { orden: "asc" },
-  });
+      orderBy: { orden: "asc" },
+    }),
+    prisma.staff.findMany({
+      where: { activo: true },
+      select: {
+        id: true,
+        nombre: true,
+        color: true,
+        activo: true,
+      },
+      orderBy: { orden: "asc" },
+    }),
+    prisma.settings.findUnique({ where: { id: "default" } }),
+  ]);
 
   return (
     <div className="min-h-[80vh] bg-white">
@@ -45,6 +59,8 @@ export default async function ReservarPage({
       >
         <BookingWizard
           services={services}
+          staffList={staffList}
+          currency={settings?.moneda || "S/"}
           preselectedSlug={searchParams.service}
         />
       </Suspense>
