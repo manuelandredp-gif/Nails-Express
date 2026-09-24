@@ -1,0 +1,167 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #5CC6BF;
+  --primary-hover: #4db5ae;
+  --primary-light: #E6F6F4;
+  --blush: #F9E3E3;
+  --blush-light: #FBEDED;
+  --accent-rose: #E8707A;
+  --text-dark: #1A1A1A;
+  --text-muted: #6B6B6B;
+  --border-light: #ECECEC;
+  --footer-dark: #0E0E0E;
+  --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--text-dark);
+  background-color: #FFFFFF;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #F8F9FA;
+}
+::-webkit-scrollbar-thumb {
+  background: #D1D5DB;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #9CA3AF;
+}
+
+/* Logo styling */
+.brand-logo-title {
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  font-size: 1.35rem;
+  line-height: 1;
+  color: #1A1A1A;
+}
+
+.brand-logo-sub {
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  font-size: 0.55rem;
+  color: #6B6B6B;
+  margin-top: 2px;
+}
+
+/* Buttons */
+.btn-primary {
+  background-color: #5CC6BF;
+  color: #FFFFFF;
+  font-weight: 600;
+  padding: 0.625rem 1.35rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+.btn-primary:hover {
+  background-color: #4db5ae;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(92, 198, 191, 0.25);
+}
+
+.btn-blush {
+  background-color: #F9E3E3;
+  color: #1A1A1A;
+  font-weight: 600;
+  padding: 0.55rem 1.25rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+.btn-blush:hover {
+  background-color: #F5D3D3;
+  transform: translateY(-1px);
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: #1A1A1A;
+  font-weight: 600;
+  padding: 0.625rem 1.35rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1.5px solid #1A1A1A;
+  transition: all 0.2s ease;
+}
+.btn-outline:hover {
+  background-color: #F5F5F5;
+}
+
+/* Chip filter styles */
+.filter-chip {
+  padding: 0.45rem 1.25rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: #F5F5F5;
+  color: #6B6B6B;
+  border: 1px solid transparent;
+}
+.filter-chip.active {
+  background-color: #5CC6BF;
+  color: #FFFFFF;
+}
+.filter-chip:hover:not(.active) {
+  background-color: #EDEDED;
+  color: #1A1A1A;
+}
+
+/* Stepper styles */
+.stepper-node {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+.stepper-node.active {
+  background-color: #5CC6BF;
+  color: #FFFFFF;
+}
+.stepper-node.completed {
+  background-color: #5CC6BF;
+  color: #FFFFFF;
+}
+.stepper-node.inactive {
+  background-color: #FFFFFF;
+  color: #6B6B6B;
+  border: 1.5px solid #D1D5DB;
+}
