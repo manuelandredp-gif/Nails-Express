@@ -78,6 +78,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Una manicurista solo puede tener una cuenta de acceso.
+    if (staffId) {
+      const yaVinculada = await prisma.user.findFirst({ where: { staffId } });
+      if (yaVinculada) {
+        return NextResponse.json(
+          { error: "Esa manicurista ya tiene una cuenta de acceso." },
+          { status: 409 }
+        );
+      }
+    }
+
     const user = await prisma.user.create({
       data: {
         nombre,

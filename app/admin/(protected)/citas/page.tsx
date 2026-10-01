@@ -1,5 +1,6 @@
 import React from "react";
 import { prisma } from "@/lib/db";
+import { requireSession, isManager } from "@/lib/auth";
 import AppointmentsTable from "@/components/admin/AppointmentsTable";
 import Link from "next/link";
 import { Plus } from "lucide-react";
@@ -7,7 +8,16 @@ import { Plus } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 export default async function CitasPage() {
+  const session = await requireSession();
+
+  // Las trabajadoras vinculadas a una manicurista solo ven sus propias citas.
+  const where: any = {};
+  if (!isManager(session.rol) && session.staffId) {
+    where.staffId = session.staffId;
+  }
+
   const appointments = await prisma.appointment.findMany({
+    where,
     include: {
       customer: true,
       service: true,

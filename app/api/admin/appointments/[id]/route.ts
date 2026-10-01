@@ -33,6 +33,15 @@ export async function GET(
       );
     }
 
+    // Las trabajadoras vinculadas solo pueden consultar sus propias citas.
+    const esManager = session.rol === "OWNER" || session.rol === "ADMIN";
+    if (!esManager && session.staffId && appointment.staffId !== session.staffId) {
+      return NextResponse.json(
+        { error: "Solo puedes ver tus propias citas." },
+        { status: 403 }
+      );
+    }
+
     return NextResponse.json({ appointment });
   } catch (err: any) {
     return NextResponse.json(
