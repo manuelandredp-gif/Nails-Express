@@ -43,6 +43,9 @@ export async function getAdminSession(): Promise<AdminSession | null> {
 
   if (!user || !user.activo) return null;
 
+  // Sesión invalidada (p. ej. tras cambiar la contraseña): el token quedó viejo.
+  if ((verified.tokenVersion ?? 0) !== user.tokenVersion) return null;
+
   return {
     userId: user.id,
     email: user.email,
@@ -58,22 +61,27 @@ export async function setAdminSession(user: {
   nombre: string;
   rol: string;
   staffId?: string | null;
+  tokenVersion?: number;
 }) {
-  const token = JwtService.sign({
-    userId: user.id,
-    email: user.email,
-    nombre: user.nombre,
-    rol: user.rol as any,
-    staffId: user.staffId,
-  });
+  const token = JwtService.sign(
+    {
+      userId: user.id,
+      email: user.email,
+      nombre: user.nombre,
+      rol: user.rol as any,
+      staffId: user.staffId,
+      tokenVersion: user.tokenVersion ?? 0,
+    },
+    2 // la sesión del panel dura 2 días
+  );
 
   const cookieStore = cookies();
   cookieStore.set(COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    sameSite: "strict", // el panel admin no se enlaza desde sitios externos → anti-CSRF
     path: "/",
-    maxAge: 60 * 60 * 24 * 7, // 7 days
+    maxAge: 60 * 60 * 24 * 2, // 2 días (sesión más corta)
   });
 }
 

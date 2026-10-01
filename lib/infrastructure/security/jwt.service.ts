@@ -21,6 +21,7 @@ export interface SessionPayload {
   nombre: string;
   rol: "OWNER" | "ADMIN" | "RECEPCION" | "MANICURISTA";
   staffId?: string | null;
+  tokenVersion?: number; // debe coincidir con el del usuario; si no, la sesión se invalida
   exp: number; // Expiration timestamp in seconds
 }
 

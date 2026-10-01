@@ -22,7 +22,10 @@ export const PATCH = withManager(async (req, { params }, session) => {
   if (body.activo !== undefined) data.activo = body.activo;
   if (body.staffId !== undefined) data.staffId = body.staffId ?? null;
   if (body.rol !== undefined) data.rol = body.rol;
-  if (body.password) data.passwordHash = hashPassword(body.password);
+  if (body.password) {
+    data.passwordHash = hashPassword(body.password);
+    data.tokenVersion = { increment: 1 }; // cierra las sesiones abiertas de esa cuenta
+  }
 
   const user = await prisma.user.update({
     where: { id: params.id },

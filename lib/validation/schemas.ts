@@ -15,7 +15,7 @@ import {
 const textoCorto = z.string().trim().min(1).max(200);
 const textoLargo = z.string().trim().max(5000);
 const email = z.string().trim().toLowerCase().email("Correo no válido");
-const password = z.string().min(6, "La contraseña debe tener al menos 6 caracteres");
+const password = z.string().min(8, "La contraseña debe tener al menos 8 caracteres");
 
 // ---------- Cita (PATCH) ----------
 export const appointmentPatchSchema = z

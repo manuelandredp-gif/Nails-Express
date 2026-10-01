@@ -24,6 +24,7 @@ model User {
   rol          String    @default("ADMIN") // OWNER | ADMIN | RECEPCION | MANICURISTA
   activo       Boolean   @default(true)
   staffId      String?
+  tokenVersion Int       @default(0) // al cambiar la clave se incrementa e invalida sesiones viejas
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 }
@@ -157,6 +158,7 @@ model Appointment {
   @@index([staffId, startAt, endAt])
   @@index([startAt])
   @@index([codigo])
+  @@index([pagado, pagadoEn]) // acelera los cálculos de la Caja
 }
 
 model AppointmentLog {

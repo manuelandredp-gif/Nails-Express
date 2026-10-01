@@ -5,6 +5,9 @@ import { verifyPassword, isHashed, hashPassword } from "@/lib/infrastructure/sec
 import { rateLimit } from "@/lib/infrastructure/security/rate-limit";
 import { logError } from "@/lib/infrastructure/logger";
 
+// Hash ficticio para igualar el tiempo de respuesta cuando el correo no existe.
+const DUMMY_HASH = hashPassword("nails-express-dummy-password-constant");
+
 export async function POST(request: NextRequest) {
   try {
     // Límite de intentos por IP (anti fuerza bruta)
@@ -33,11 +36,13 @@ export async function POST(request: NextRequest) {
       where: { email: email.toLowerCase().trim() },
     });
 
+    // Mensaje único y verificación de igual duración aunque el usuario no exista:
+    // así no se revela si el correo está registrado (anti-enumeración + timing).
+    const GENERICO = "Correo o contraseña incorrectos.";
+
     if (!user || !user.activo) {
-      return NextResponse.json(
-        { error: "Credenciales inválidas o usuario inactivo." },
-        { status: 401 }
-      );
+      verifyPassword(password, DUMMY_HASH); // quema tiempo similar a un login real
+      return NextResponse.json({ error: GENERICO }, { status: 401 });
     }
 
     // Verificación de contraseña con scrypt. Compatibilidad hacia atrás:
@@ -57,7 +62,7 @@ export async function POST(request: NextRequest) {
 
     if (!valid) {
       return NextResponse.json(
-        { error: "Contraseña incorrecta." },
+        { error: GENERICO },
         { status: 401 }
       );
     }

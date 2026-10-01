@@ -30,7 +30,9 @@ function AdminLoginForm() {
         toast.error(data.error || "Credenciales incorrectas.");
       } else {
         toast.success(`Bienvenido/a, ${data.user.nombre}`);
-        const redirect = searchParams.get("from") || "/admin";
+        // Solo se permite redirigir a rutas internas del panel (anti open-redirect).
+        const from = searchParams.get("from") || "";
+        const redirect = /^\/admin(\/|$)/.test(from) ? from : "/admin";
         router.push(redirect);
         router.refresh();
       }
