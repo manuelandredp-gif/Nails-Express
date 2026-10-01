@@ -33,7 +33,11 @@ export const POST = withManager(async (req) => {
   const name = `${Date.now()}-${base}${ext}`;
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  const url = await saveUpload(buffer, name, file.type);
-
-  return NextResponse.json({ url });
+  try {
+    const url = await saveUpload(buffer, name, file.type);
+    return NextResponse.json({ url });
+  } catch (err: any) {
+    // El error de almacenamiento es informativo para la administración (no sensible).
+    throw new HttpError(500, err?.message || "No se pudo guardar la imagen.");
+  }
 });
