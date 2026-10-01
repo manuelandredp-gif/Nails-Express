@@ -3,29 +3,8 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import {
-  KeyRound,
-  Trash2,
-  ShieldCheck,
-  CheckCircle2,
-  XCircle,
-  UserPlus,
-  Lock,
-  Pencil,
-  Phone,
-  MapPin,
-  IdCard,
-  Mail,
-} from "lucide-react";
-import {
-  Empleada,
-  Manager,
-  FichaDraft,
-  FICHA_VACIA,
-  ROLES,
-  ROL_CHIP,
-  ROL_NOMBRE,
-} from "./equipo/shared";
+import { KeyRound, Trash2, ShieldCheck, CheckCircle2, XCircle, UserPlus, Lock, Pencil, Phone, MapPin, IdCard, Mail } from "lucide-react";
+import { Empleada, Manager, FichaDraft, FICHA_VACIA, ROLES, ROL_CHIP, ROL_NOMBRE } from "./equipo/shared";
 import FichaEmpleadaModal from "./equipo/FichaEmpleadaModal";
 import DarAccesoForm from "./equipo/DarAccesoForm";
 
