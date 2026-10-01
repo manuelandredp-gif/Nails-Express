@@ -343,6 +343,21 @@ export default function SettingsManager({
               <Text k="heroImagenAlt" label="Texto alternativo de la imagen (SEO)" />
               <Area k="heroCaligrafia" label="Frase caligráfica sobre la imagen" rows={2} hint="Vacío = se oculta." />
             </div>
+            <Text
+              k="heroNota"
+              label="Nota de confianza bajo el botón"
+              hint="Ej. Reserva online en 1 minuto · Confirmación al instante. Vacío = se oculta."
+            />
+          </Card>
+          <Card title="Banner final «Reserva ahora»" icon={Sparkles}>
+            <p className="text-xs text-[#6B6B6B] -mt-1">
+              Es el llamado grande de color al final de la página, justo antes del contacto.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              <Text k="ctaFinalTitulo" label="Título" />
+              <Text k="ctaFinalBoton" label="Texto del botón" />
+            </div>
+            <Area k="ctaFinalSubtitulo" label="Subtítulo" rows={2} />
           </Card>
           <Card title="Sellos de confianza (3 columnas)" icon={Sparkles}>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -596,6 +611,10 @@ export default function SettingsManager({
             <Text k="sellosTitulo" label="Título de la tarjeta" />
             <Text k="sellosSubtitulo" label="Subtítulo de la tarjeta" />
           </div>
+          <p className="text-xs text-[#6B6B6B]">
+            💡 Estos textos también aparecen en la sección «Programa de fidelidad»
+            de la página principal, que promociona los sellos a tus clientas.
+          </p>
         </Card>
       )}
 

@@ -37,6 +37,7 @@ export default async function CitasPage() {
     origen: a.origen,
     notasCliente: a.notasCliente,
     pagado: a.pagado,
+    metodoPago: a.metodoPago,
     resenaEstrellas: a.resenaEstrellas,
     resenaTexto: a.resenaTexto,
     customer: {

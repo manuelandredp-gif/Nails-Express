@@ -96,6 +96,7 @@ export async function PATCH(
       notasInternas,
       motivoCancelacion,
       pagado,
+      metodoPago,
       resenaEstrellas,
       resenaTexto,
     } = body;
@@ -121,9 +122,23 @@ export async function PATCH(
     const logDetails: string[] = [];
 
     // Pago
+    const METODOS_VALIDOS = ["EFECTIVO", "YAPE", "PLIN", "TARJETA"];
     if (pagado !== undefined) {
       dataToUpdate.pagado = Boolean(pagado);
-      logDetails.push(pagado ? "Marcada como pagada" : "Marcada como no pagada");
+      if (pagado) {
+        // Se registra el momento real del cobro y el método usado.
+        dataToUpdate.pagadoEn = new Date();
+        if (metodoPago && METODOS_VALIDOS.includes(String(metodoPago))) {
+          dataToUpdate.metodoPago = String(metodoPago);
+        }
+        logDetails.push(
+          `Cobro registrado${metodoPago ? ` (${metodoPago})` : ""}`
+        );
+      } else {
+        dataToUpdate.pagadoEn = null;
+        dataToUpdate.metodoPago = null;
+        logDetails.push("Cobro anulado (marcada como no pagada)");
+      }
     }
     // Reseña privada del cliente
     if (resenaEstrellas !== undefined) {

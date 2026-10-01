@@ -2,14 +2,29 @@ import React from "react";
 import { prisma } from "@/lib/db";
 import { requireManager } from "@/lib/auth";
 import { getSiteSettings } from "@/lib/site-content";
-import { startOfDay, endOfDay, subDays } from "date-fns";
+import { startOfDay, endOfDay, subDays, startOfMonth } from "date-fns";
 import { es } from "date-fns/locale";
 import { formatInTimeZone } from "date-fns-tz";
-import { Wallet, TrendingUp, Clock, CheckCircle2, CalendarDays } from "lucide-react";
+import {
+  Wallet,
+  TrendingUp,
+  Clock,
+  CheckCircle2,
+  CalendarDays,
+  Users,
+  CreditCard,
+} from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 const TZ = "America/Lima";
+
+const METODO_LABEL: Record<string, string> = {
+  EFECTIVO: "💵 Efectivo",
+  YAPE: "📱 Yape",
+  PLIN: "📲 Plin",
+  TARJETA: "💳 Tarjeta",
+};
 
 export default async function CajaPage() {
   await requireManager();
@@ -20,8 +35,10 @@ export default async function CajaPage() {
   const todayStart = startOfDay(now);
   const todayEnd = endOfDay(now);
   const weekStart = startOfDay(subDays(now, 6));
+  const monthStart = startOfMonth(now);
 
-  const [todayAppts, weekAppts] = await Promise.all([
+  const [todayAppts, paidMonth] = await Promise.all([
+    // Citas de hoy (para la tabla de movimientos y pendientes)
     prisma.appointment.findMany({
       where: {
         startAt: { gte: todayStart, lte: todayEnd },
@@ -30,65 +47,100 @@ export default async function CajaPage() {
       include: { customer: true, service: true, staff: true },
       orderBy: { startAt: "asc" },
     }),
+    // Todo lo cobrado en el mes (la fecha real del cobro es pagadoEn;
+    // las citas antiguas sin pagadoEn usan la fecha de la cita)
     prisma.appointment.findMany({
       where: {
-        startAt: { gte: weekStart, lte: todayEnd },
+        pagado: true,
         estado: { not: "CANCELADA" },
+        OR: [
+          { pagadoEn: { gte: monthStart } },
+          { pagadoEn: null, startAt: { gte: monthStart } },
+        ],
       },
-      select: { precio: true, pagado: true },
+      select: {
+        precio: true,
+        pagadoEn: true,
+        startAt: true,
+        metodoPago: true,
+        staff: { select: { nombre: true, color: true } },
+      },
     }),
   ]);
 
   const money = (n: number) =>
     `${moneda} ${n.toLocaleString("es-PE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-  const cobradoHoy = todayAppts
-    .filter((a) => a.pagado)
-    .reduce((s, a) => s + a.precio, 0);
+  // Fecha efectiva del cobro
+  const fechaCobro = (p: { pagadoEn: Date | null; startAt: Date }) =>
+    p.pagadoEn ?? p.startAt;
+
+  const paidToday = paidMonth.filter((p) => fechaCobro(p) >= todayStart && fechaCobro(p) <= todayEnd);
+  const paidWeek = paidMonth.filter((p) => fechaCobro(p) >= weekStart);
+
+  const sum = (arr: { precio: number }[]) => arr.reduce((s, a) => s + a.precio, 0);
+
+  const cobradoHoy = sum(paidToday);
+  const cobradoSemana = sum(paidWeek);
+  const cobradoMes = sum(paidMonth);
 
   const pendienteHoy = todayAppts
     .filter((a) => !a.pagado && a.estado === "COMPLETADA")
     .reduce((s, a) => s + a.precio, 0);
 
-  const porVenirHoy = todayAppts
-    .filter((a) => !a.pagado && a.estado !== "COMPLETADA")
-    .reduce((s, a) => s + a.precio, 0);
+  // Desglose últimos 7 días
+  const porManicurista = Object.entries(
+    paidWeek.reduce<Record<string, { total: number; count: number; color: string }>>(
+      (acc, p) => {
+        const k = p.staff.nombre;
+        if (!acc[k]) acc[k] = { total: 0, count: 0, color: p.staff.color };
+        acc[k].total += p.precio;
+        acc[k].count += 1;
+        return acc;
+      },
+      {}
+    )
+  ).sort((a, b) => b[1].total - a[1].total);
 
-  const cobradoSemana = weekAppts
-    .filter((a) => a.pagado)
-    .reduce((s, a) => s + a.precio, 0);
+  const porMetodo = Object.entries(
+    paidWeek.reduce<Record<string, number>>((acc, p) => {
+      const k = p.metodoPago || "SIN_METODO";
+      acc[k] = (acc[k] || 0) + p.precio;
+      return acc;
+    }, {})
+  ).sort((a, b) => b[1] - a[1]);
 
-  const citasPagadasHoy = todayAppts.filter((a) => a.pagado).length;
-
-  const fechaHoy = formatInTimeZone(now, TZ, "EEEE d 'de' MMMM", { locale: es });
+  const fechaCruda = formatInTimeZone(now, TZ, "EEEE d 'de' MMMM", { locale: es });
+  const fechaHoy = fechaCruda.charAt(0).toUpperCase() + fechaCruda.slice(1);
+  const nombreMes = formatInTimeZone(now, TZ, "MMMM", { locale: es });
 
   const kpis = [
     {
       label: "Cobrado hoy",
       value: money(cobradoHoy),
-      sub: `${citasPagadasHoy} ${citasPagadasHoy === 1 ? "cita pagada" : "citas pagadas"}`,
+      sub: `${paidToday.length} ${paidToday.length === 1 ? "cobro" : "cobros"}`,
       icon: Wallet,
       grad: "from-[#5CC6BF] to-[#3FA8A1]",
     },
     {
       label: "Por cobrar (atendidas)",
       value: money(pendienteHoy),
-      sub: "Citas completadas sin pago",
+      sub: "Citas de hoy completadas sin pago",
       icon: Clock,
       grad: "from-[#F0A94C] to-[#E08A2A]",
     },
     {
-      label: "Agendado por venir",
-      value: money(porVenirHoy),
-      sub: "Citas de hoy aún no atendidas",
-      icon: CalendarDays,
+      label: "Últimos 7 días",
+      value: money(cobradoSemana),
+      sub: `${paidWeek.length} cobros en la semana`,
+      icon: TrendingUp,
       grad: "from-[#7C9EF0] to-[#5578E0]",
     },
     {
-      label: "Cobrado últimos 7 días",
-      value: money(cobradoSemana),
-      sub: "Total de la semana",
-      icon: TrendingUp,
+      label: `Este mes (${nombreMes})`,
+      value: money(cobradoMes),
+      sub: `${paidMonth.length} cobros en el mes`,
+      icon: CalendarDays,
       grad: "from-[#E26D9A] to-[#C64E7E]",
     },
   ];
@@ -99,7 +151,7 @@ export default async function CajaPage() {
         <h1 className="text-2xl sm:text-3xl font-extrabold text-[#1A1A1A]">
           Caja del día
         </h1>
-        <p className="text-xs sm:text-sm text-[#6B6B6B] mt-0.5 capitalize">
+        <p className="text-xs sm:text-sm text-[#6B6B6B] mt-0.5">
           {fechaHoy}
         </p>
       </div>
@@ -135,7 +187,75 @@ export default async function CajaPage() {
         })}
       </div>
 
-      {/* Detalle de cobros de hoy */}
+      {/* Desglose de la semana */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        {/* Por manicurista */}
+        <div className="bg-white rounded-2xl border border-[#ECECEC] shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#ECECEC] flex items-center gap-2">
+            <Users className="w-5 h-5 text-[#E26D9A]" />
+            <h2 className="font-bold text-[#1A1A1A]">Por manicurista</h2>
+            <span className="ml-auto text-xs text-[#9B8890]">Últimos 7 días</span>
+          </div>
+          {porManicurista.length === 0 ? (
+            <p className="p-6 text-center text-sm text-[#9B8890]">
+              Sin cobros esta semana.
+            </p>
+          ) : (
+            <ul className="divide-y divide-[#F6F6F6]">
+              {porManicurista.map(([nombre, d]) => (
+                <li key={nombre} className="px-5 py-3 flex items-center gap-3">
+                  <span
+                    className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-xs shrink-0"
+                    style={{ backgroundColor: d.color }}
+                  >
+                    {nombre.charAt(0)}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-[#1A1A1A] truncate">
+                      {nombre}
+                    </p>
+                    <p className="text-[0.7rem] text-[#9B8890]">
+                      {d.count} {d.count === 1 ? "cita cobrada" : "citas cobradas"}
+                    </p>
+                  </div>
+                  <span className="font-extrabold text-[#1A1A1A] whitespace-nowrap">
+                    {money(d.total)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {/* Por método de pago */}
+        <div className="bg-white rounded-2xl border border-[#ECECEC] shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#ECECEC] flex items-center gap-2">
+            <CreditCard className="w-5 h-5 text-[#5CC6BF]" />
+            <h2 className="font-bold text-[#1A1A1A]">Por método de pago</h2>
+            <span className="ml-auto text-xs text-[#9B8890]">Últimos 7 días</span>
+          </div>
+          {porMetodo.length === 0 ? (
+            <p className="p-6 text-center text-sm text-[#9B8890]">
+              Sin cobros esta semana.
+            </p>
+          ) : (
+            <ul className="divide-y divide-[#F6F6F6]">
+              {porMetodo.map(([metodo, total]) => (
+                <li key={metodo} className="px-5 py-3 flex items-center justify-between gap-3">
+                  <span className="text-sm font-semibold text-[#1A1A1A]">
+                    {METODO_LABEL[metodo] || "Sin método registrado"}
+                  </span>
+                  <span className="font-extrabold text-[#1A1A1A] whitespace-nowrap">
+                    {money(total)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+
+      {/* Detalle de movimientos de hoy */}
       <div className="bg-white rounded-2xl border border-[#ECECEC] shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b border-[#ECECEC] flex items-center gap-2">
           <CheckCircle2 className="w-5 h-5 text-[#5CC6BF]" />
@@ -177,7 +297,7 @@ export default async function CajaPage() {
                     <td className="px-5 py-3 text-center">
                       {a.pagado ? (
                         <span className="inline-block text-[0.65rem] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-semibold">
-                          Pagado
+                          Pagado{a.metodoPago ? ` · ${(METODO_LABEL[a.metodoPago] || a.metodoPago).replace(/^[^ ]+ /, "")}` : ""}
                         </span>
                       ) : a.estado === "COMPLETADA" ? (
                         <span className="inline-block text-[0.65rem] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-semibold">
@@ -209,8 +329,8 @@ export default async function CajaPage() {
       </div>
 
       <p className="text-[0.7rem] text-[#9B8890] px-1">
-        El pago se marca desde <strong>Citas</strong> con el botón «Pagado». La
-        caja suma automáticamente las citas marcadas como pagadas.
+        El cobro se registra desde <strong>Citas</strong> con el botón «Cobrar»,
+        eligiendo el método de pago. La caja usa la fecha y hora reales de cada cobro.
       </p>
     </div>
   );

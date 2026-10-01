@@ -1,8 +1,9 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Gem, Clock, Heart } from "lucide-react";
+import { Gem, Clock, Heart, MessageCircle } from "lucide-react";
 import type { SiteSettings } from "@/lib/site-content";
+import { whatsappLink } from "@/lib/site-content";
 
 interface HeroProps {
   settings: SiteSettings;
@@ -62,15 +63,33 @@ export default function Hero({ settings: s }: HeroProps) {
               <MultiLine text={s.heroSubtitulo} />
             </p>
 
-            {/* CTA Button */}
-            <div className="pt-2">
-              <Link
-                href="/reservar"
-                className="btn-primary text-sm py-3.5 px-8"
-              >
-                <span>{botonTexto}</span>
-                <span>→</span>
-              </Link>
+            {/* CTA Buttons */}
+            <div className="pt-2 space-y-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <Link
+                  href="/reservar"
+                  className="btn-primary text-sm py-3.5 px-8"
+                >
+                  <span>{botonTexto}</span>
+                  <span>→</span>
+                </Link>
+                {s.whatsapp && (
+                  <a
+                    href={whatsappLink(s.whatsapp, s.whatsappMensaje || "Hola! Quiero reservar una cita 💅")}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 text-sm font-semibold py-3.5 px-6 rounded-full border-2 border-[#25D366]/40 text-[#128C4B] hover:bg-[#25D366]/10 transition-colors"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    WhatsApp
+                  </a>
+                )}
+              </div>
+              {s.heroNota && (
+                <p className="text-[11px] text-[#8E8E8E] font-medium tracking-wide">
+                  ✓ {s.heroNota}
+                </p>
+              )}
             </div>
 
             {/* Trust Indicators */}

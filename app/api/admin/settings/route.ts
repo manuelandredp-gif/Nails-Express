@@ -33,6 +33,7 @@ const STRING_FIELDS = [
   "beneficios", "testimoniosTitulo", "testimoniosSubtitulo",
   "coloresTitulo", "coloresSubtitulo", "coloresLista",
   "antesDespuesTitulo", "antesImagen", "despuesImagen", "instagramUsuario",
+  "heroNota", "ctaFinalTitulo", "ctaFinalSubtitulo", "ctaFinalBoton",
 ] as const;
 
 const INT_FIELDS = [

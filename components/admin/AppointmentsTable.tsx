@@ -25,6 +25,7 @@ interface AppointmentItem {
   origen: string;
   notasCliente?: string | null;
   pagado?: boolean;
+  metodoPago?: string | null;
   resenaEstrellas?: number | null;
   resenaTexto?: string | null;
   customer: {
@@ -57,6 +58,24 @@ function buildReminderLink(app: AppointmentItem): string {
   return `https://wa.me/${digits}?text=${encodeURIComponent(msg)}`;
 }
 
+/** Enlace de WhatsApp para pedirle una reseña a la clienta tras atenderla. */
+function buildReviewRequestLink(app: AppointmentItem): string {
+  const digits = app.customer.celular.replace(/[^\d]/g, "");
+  const nombre = app.customer.nombre.split(" ")[0];
+  const msg =
+    `Hola ${nombre}! 💕 Gracias por visitarnos en Nails Express. ` +
+    `¿Cómo quedaron tus uñas? Nos encantaría conocer tu opinión: ` +
+    `tu recomendación nos ayuda muchísimo. ¡Y recuerda que cada visita suma un sello para tu premio! 💅✨`;
+  return `https://wa.me/${digits}?text=${encodeURIComponent(msg)}`;
+}
+
+const METODOS_PAGO = [
+  { id: "EFECTIVO", label: "Efectivo", emoji: "💵" },
+  { id: "YAPE", label: "Yape", emoji: "📱" },
+  { id: "PLIN", label: "Plin", emoji: "📲" },
+  { id: "TARJETA", label: "Tarjeta", emoji: "💳" },
+];
+
 export default function AppointmentsTable({
   initialAppointments,
 }: AppointmentsTableProps) {
@@ -68,6 +87,7 @@ export default function AppointmentsTable({
   const [showHistorial, setShowHistorial] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [reviewFor, setReviewFor] = useState<AppointmentItem | null>(null);
+  const [payFor, setPayFor] = useState<AppointmentItem | null>(null);
 
   const filteredAppointments = appointments.filter((app) => {
     const q = search.toLowerCase();
@@ -309,6 +329,11 @@ export default function AppointmentsTable({
                       {app.pagado && (
                         <span className="px-2 py-0.5 rounded-full text-[0.6rem] font-bold bg-emerald-100 text-emerald-700 inline-flex items-center gap-0.5">
                           <DollarSign className="w-2.5 h-2.5" /> Pagado
+                          {app.metodoPago && (
+                            <span className="font-medium opacity-80">
+                              · {METODOS_PAGO.find((m) => m.id === app.metodoPago)?.label || app.metodoPago}
+                            </span>
+                          )}
                         </span>
                       )}
                     </div>
@@ -328,24 +353,30 @@ export default function AppointmentsTable({
                           <Check className="w-3 h-3" /> Completar
                         </button>
                       )}
-                      {/* Pagado (toggle) */}
+                      {/* Pagado: al cobrar pregunta el método; si ya está pagado permite anular */}
                       <button
-                        onClick={() =>
-                          updateAppointment(
-                            app.id,
-                            { pagado: !app.pagado },
-                            app.pagado ? "Marcada como no pagada." : "Marcada como pagada."
-                          )
-                        }
+                        onClick={() => {
+                          if (app.pagado) {
+                            if (window.confirm("¿Anular el cobro de esta cita?")) {
+                              updateAppointment(
+                                app.id,
+                                { pagado: false, metodoPago: null },
+                                "Cobro anulado."
+                              );
+                            }
+                          } else {
+                            setPayFor(app);
+                          }
+                        }}
                         disabled={busyId === app.id}
                         className={`px-2 py-1 rounded-lg text-[0.65rem] font-bold inline-flex items-center gap-1 disabled:opacity-50 ${
                           app.pagado
                             ? "bg-emerald-600 text-white hover:bg-emerald-700"
                             : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
                         }`}
-                        title="Marcar pago"
+                        title="Registrar cobro"
                       >
-                        <DollarSign className="w-3 h-3" /> {app.pagado ? "Pagado" : "Pagar"}
+                        <DollarSign className="w-3 h-3" /> {app.pagado ? "Pagado" : "Cobrar"}
                       </button>
                       {/* Reseña privada */}
                       <button
@@ -356,16 +387,28 @@ export default function AppointmentsTable({
                         <Star className={`w-3 h-3 ${app.resenaEstrellas ? "fill-amber-500 text-amber-500" : ""}`} />
                         {app.resenaEstrellas ? app.resenaEstrellas : "Reseña"}
                       </button>
-                      {/* Recordatorio por WhatsApp (mensaje prellenado) */}
-                      <a
-                        href={buildReminderLink(app)}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="px-2 py-1 rounded-lg text-[0.65rem] font-bold bg-green-50 text-green-700 hover:bg-green-100 inline-flex items-center gap-1"
-                        title="Enviar recordatorio por WhatsApp"
-                      >
-                        <MessageCircle className="w-3 h-3" /> Recordar
-                      </a>
+                      {/* WhatsApp: recordatorio si está pendiente, pedir reseña si ya se atendió */}
+                      {app.estado === "COMPLETADA" ? (
+                        <a
+                          href={buildReviewRequestLink(app)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-2 py-1 rounded-lg text-[0.65rem] font-bold bg-green-50 text-green-700 hover:bg-green-100 inline-flex items-center gap-1"
+                          title="Pedirle su opinión por WhatsApp"
+                        >
+                          <MessageCircle className="w-3 h-3" /> Pedir reseña
+                        </a>
+                      ) : (
+                        <a
+                          href={buildReminderLink(app)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-2 py-1 rounded-lg text-[0.65rem] font-bold bg-green-50 text-green-700 hover:bg-green-100 inline-flex items-center gap-1"
+                          title="Enviar recordatorio por WhatsApp"
+                        >
+                          <MessageCircle className="w-3 h-3" /> Recordar
+                        </a>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -380,6 +423,62 @@ export default function AppointmentsTable({
           </div>
         )}
       </div>
+
+      {payFor && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-[20px] max-w-sm w-full p-6 space-y-4 shadow-2xl">
+            <div className="flex items-start justify-between border-b pb-3">
+              <div>
+                <h3 className="text-lg font-bold text-[#1A1A1A]">Registrar cobro</h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  {payFor.customer.nombre} · S/ {payFor.precio.toFixed(0)}
+                </p>
+              </div>
+              <button
+                onClick={() => setPayFor(null)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-gray-600 font-medium">¿Cómo pagó la clienta?</p>
+            <div className="grid grid-cols-2 gap-2">
+              {METODOS_PAGO.map((m) => (
+                <button
+                  key={m.id}
+                  disabled={busyId === payFor.id}
+                  onClick={async () => {
+                    const ok = await updateAppointment(
+                      payFor.id,
+                      { pagado: true, metodoPago: m.id },
+                      `Cobro registrado (${m.label}).`
+                    );
+                    if (ok) setPayFor(null);
+                  }}
+                  className="py-3 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-sm font-bold inline-flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  <span>{m.emoji}</span> {m.label}
+                </button>
+              ))}
+            </div>
+            <button
+              disabled={busyId === payFor.id}
+              onClick={async () => {
+                const ok = await updateAppointment(
+                  payFor.id,
+                  { pagado: true },
+                  "Marcada como pagada."
+                );
+                if (ok) setPayFor(null);
+              }}
+              className="w-full text-[0.7rem] text-gray-400 hover:text-gray-600 underline disabled:opacity-50"
+            >
+              Solo marcar como pagada (sin método)
+            </button>
+          </div>
+        </div>
+      )}
 
       {reviewFor && (
         <ReviewModal

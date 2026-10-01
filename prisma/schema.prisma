@@ -133,6 +133,8 @@ model Appointment {
   motivoCancelacion String?
   selloOtorgado     Boolean          @default(false) // evita contar el sello dos veces
   pagado            Boolean          @default(false)
+  metodoPago        String?          // EFECTIVO | YAPE | PLIN | TARJETA
+  pagadoEn          DateTime?        // momento real en que se registró el cobro
   resenaEstrellas   Int?             // calificación privada del cliente (1-5)
   resenaTexto       String?          // nota privada sobre el cliente/atención
   logs              AppointmentLog[]
@@ -325,6 +327,11 @@ model Settings {
   sellosTitulo             String   @default("Tu tarjeta de sellos")
   sellosSubtitulo          String   @default("Junta un sello con cada visita y gana un premio")
   sellosExpiraDias         Int      @default(180) // 0 = los premios no expiran
+  // --- Landing: confianza y CTA final ---
+  heroNota                 String   @default("Reserva online en 1 minuto · Confirmación al instante")
+  ctaFinalTitulo           String   @default("¿Lista para estrenar uñas?")
+  ctaFinalSubtitulo        String   @default("Elige tu servicio, tu manicurista y tu horario. Tu cita queda confirmada al momento.")
+  ctaFinalBoton            String   @default("Reservar mi cita")
   // --- Franja de beneficios (bajo el hero) ---
   beneficiosActivo         Boolean  @default(true)
   beneficios               String   @default("Reserva online|Agenda tu cita 24/7 en segundos\nProductos premium|Marcas de primera calidad\nManicuristas expertas|Equipo profesional y cálido\nPuntualidad|Respetamos tu tiempo")

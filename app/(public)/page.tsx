@@ -14,6 +14,8 @@ import TestimonialsSection from "@/components/public/TestimonialsSection";
 import SeasonColors from "@/components/public/SeasonColors";
 import InstagramStrip from "@/components/public/InstagramStrip";
 import BeforeAfter from "@/components/public/BeforeAfter";
+import LoyaltyPromo from "@/components/public/LoyaltyPromo";
+import CtaBanner from "@/components/public/CtaBanner";
 export const revalidate = 60; // ISR revalidation
 
 export default async function HomePage() {
@@ -104,6 +106,18 @@ export default async function HomePage() {
         />
       </Reveal>
 
+      {settings.sellosActivo && (
+        <Reveal>
+          <LoyaltyPromo
+            titulo={settings.sellosTitulo}
+            subtitulo={settings.sellosSubtitulo}
+            meta={settings.sellosMeta}
+            premio={settings.sellosPremio}
+            boton={settings.ctaFinalBoton}
+          />
+        </Reveal>
+      )}
+
       {settings.testimoniosActivo && testimonios.length > 0 && (
         <Reveal>
           <TestimonialsSection
@@ -137,6 +151,16 @@ export default async function HomePage() {
           faqs={faqs}
           titulo={settings.faqTitulo}
           subtitulo={settings.faqSubtitulo}
+        />
+      </Reveal>
+
+      <Reveal>
+        <CtaBanner
+          titulo={settings.ctaFinalTitulo}
+          subtitulo={settings.ctaFinalSubtitulo}
+          boton={settings.ctaFinalBoton}
+          whatsapp={settings.whatsapp}
+          whatsappMensaje={settings.whatsappMensaje}
         />
       </Reveal>
 
