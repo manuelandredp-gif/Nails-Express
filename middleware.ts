@@ -79,7 +79,6 @@ const MANAGER_API_PREFIXES = [
   "/api/admin/staff",
   "/api/admin/customers",
   "/api/admin/business-hours",
-  "/api/admin/timeblocks",
   "/api/admin/upload",
   "/api/admin/users",
   "/api/admin/testimonials",

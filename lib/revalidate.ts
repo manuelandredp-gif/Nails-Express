@@ -1,4 +1,5 @@
 import { revalidatePath } from "next/cache";
+import { logError } from "./infrastructure/logger";
 
 /**
  * Invalida la caché ISR de toda la web pública para que los cambios
@@ -8,6 +9,6 @@ export function revalidatePublicSite() {
   try {
     revalidatePath("/", "layout");
   } catch (err) {
-    console.error("revalidatePublicSite:", err);
+    logError("revalidate_failed", err);
   }
 }

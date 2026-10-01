@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "./db";
 import { JwtService, SessionPayload } from "./infrastructure/security/jwt.service";
+import { isManagerRol } from "./domain/constants";
 
 export type AdminSession = Omit<SessionPayload, "exp">;
 
@@ -9,7 +10,7 @@ const COOKIE_NAME = "nails_admin_session";
 
 /** OWNER y ADMIN tienen acceso total (caja, edición, configuración). */
 export function isManager(rol?: string | null): boolean {
-  return rol === "OWNER" || rol === "ADMIN";
+  return isManagerRol(rol);
 }
 
 /** Páginas solo para dueña/admin: redirige a las trabajadoras a su vista de citas. */

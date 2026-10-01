@@ -1,62 +1,32 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { getAdminSession, isManager } from "@/lib/auth";
 import { revalidatePublicSite } from "@/lib/revalidate";
+import { withManager, readJson } from "@/lib/http/api";
+import { testimonialCreateSchema } from "@/lib/validation/schemas";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-  try {
-    const testimonials = await prisma.testimonial.findMany({
-      orderBy: { orden: "asc" },
-    });
-    return NextResponse.json({ testimonials });
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: "Error al listar testimonios." },
-      { status: 500 }
-    );
-  }
-}
+export const GET = withManager(async () => {
+  const testimonials = await prisma.testimonial.findMany({ orderBy: { orden: "asc" } });
+  return NextResponse.json({ testimonials });
+});
 
-export async function POST(request: NextRequest) {
-  try {
-    const session = await getAdminSession();
-    if (!session || !isManager(session.rol)) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
-    }
+export const POST = withManager(async (req) => {
+  const b = await readJson(req, testimonialCreateSchema);
+  const count = await prisma.testimonial.count();
 
-    const body = await request.json();
-    const nombre = String(body.nombre || "").trim();
-    const texto = String(body.texto || "").trim();
-    if (!nombre || !texto) {
-      return NextResponse.json(
-        { error: "Nombre y testimonio son obligatorios." },
-        { status: 400 }
-      );
-    }
+  const testimonial = await prisma.testimonial.create({
+    data: {
+      nombre: b.nombre,
+      texto: b.texto,
+      estrellas: b.estrellas ?? 5,
+      servicio: b.servicio || null,
+      avatar: b.avatar || null,
+      visible: b.visible === undefined ? true : b.visible,
+      orden: count + 1,
+    },
+  });
 
-    const count = await prisma.testimonial.count();
-    const estrellas = Math.min(5, Math.max(1, parseInt(String(body.estrellas ?? 5), 10) || 5));
-
-    const testimonial = await prisma.testimonial.create({
-      data: {
-        nombre,
-        texto,
-        estrellas,
-        servicio: body.servicio ? String(body.servicio).trim() : null,
-        avatar: body.avatar ? String(body.avatar).trim() : null,
-        visible: body.visible === undefined ? true : Boolean(body.visible),
-        orden: count + 1,
-      },
-    });
-
-    revalidatePublicSite();
-    return NextResponse.json({ success: true, testimonial }, { status: 201 });
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: "Error al crear testimonio." },
-      { status: 500 }
-    );
-  }
-}
+  revalidatePublicSite();
+  return NextResponse.json({ success: true, testimonial }, { status: 201 });
+});

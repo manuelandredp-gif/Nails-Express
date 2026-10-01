@@ -1,0 +1,61 @@
+name: CI
+
+# Red de seguridad: ninguna rama llega a producción sin pasar tipos, build y tests.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: nails_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nails_ci
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/nails_ci
+      AUTH_SECRET: ci-only-secret-at-least-32-characters-long-0000
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Generar cliente Prisma
+        run: npx prisma generate
+
+      - name: Aplicar migraciones a la BD de prueba
+        run: npx prisma migrate deploy
+
+      - name: Verificar tipos (TypeScript)
+        run: npx tsc --noEmit
+
+      - name: Compilar (next build)
+        run: npx next build
+
+      - name: Fitness functions (reglas de arquitectura)
+        run: node scripts/fitness-check.mjs
+
+      - name: Ejecutar tests
+        run: node tests/run-all.js

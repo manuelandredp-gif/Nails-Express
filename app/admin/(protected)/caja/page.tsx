@@ -5,6 +5,7 @@ import { getSiteSettings } from "@/lib/site-content";
 import { startOfDay, endOfDay, subDays, startOfMonth } from "date-fns";
 import { es } from "date-fns/locale";
 import { formatInTimeZone } from "date-fns-tz";
+import { sumarPrecios, sumarDinero, formatearDinero } from "@/lib/domain/money";
 import {
   Wallet,
   TrendingUp,
@@ -68,8 +69,8 @@ export default async function CajaPage() {
     }),
   ]);
 
-  const money = (n: number) =>
-    `${moneda} ${n.toLocaleString("es-PE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  // Suma de dinero con redondeo a céntimos en cada paso (evita error acumulado).
+  const money = (n: number) => formatearDinero(n, moneda);
 
   // Fecha efectiva del cobro
   const fechaCobro = (p: { pagadoEn: Date | null; startAt: Date }) =>
@@ -78,37 +79,39 @@ export default async function CajaPage() {
   const paidToday = paidMonth.filter((p) => fechaCobro(p) >= todayStart && fechaCobro(p) <= todayEnd);
   const paidWeek = paidMonth.filter((p) => fechaCobro(p) >= weekStart);
 
-  const sum = (arr: { precio: number }[]) => arr.reduce((s, a) => s + a.precio, 0);
+  const cobradoHoy = sumarPrecios(paidToday);
+  const cobradoSemana = sumarPrecios(paidWeek);
+  const cobradoMes = sumarPrecios(paidMonth);
 
-  const cobradoHoy = sum(paidToday);
-  const cobradoSemana = sum(paidWeek);
-  const cobradoMes = sum(paidMonth);
-
-  const pendienteHoy = todayAppts
-    .filter((a) => !a.pagado && a.estado === "COMPLETADA")
-    .reduce((s, a) => s + a.precio, 0);
+  const pendienteHoy = sumarPrecios(
+    todayAppts.filter((a) => !a.pagado && a.estado === "COMPLETADA")
+  );
 
   // Desglose últimos 7 días
   const porManicurista = Object.entries(
-    paidWeek.reduce<Record<string, { total: number; count: number; color: string }>>(
+    paidWeek.reduce<Record<string, { importes: number[]; count: number; color: string }>>(
       (acc, p) => {
         const k = p.staff.nombre;
-        if (!acc[k]) acc[k] = { total: 0, count: 0, color: p.staff.color };
-        acc[k].total += p.precio;
+        if (!acc[k]) acc[k] = { importes: [], count: 0, color: p.staff.color };
+        acc[k].importes.push(p.precio);
         acc[k].count += 1;
         return acc;
       },
       {}
     )
-  ).sort((a, b) => b[1].total - a[1].total);
+  )
+    .map(([nombre, d]) => [nombre, { total: sumarDinero(d.importes), count: d.count, color: d.color }] as const)
+    .sort((a, b) => b[1].total - a[1].total);
 
   const porMetodo = Object.entries(
-    paidWeek.reduce<Record<string, number>>((acc, p) => {
+    paidWeek.reduce<Record<string, number[]>>((acc, p) => {
       const k = p.metodoPago || "SIN_METODO";
-      acc[k] = (acc[k] || 0) + p.precio;
+      (acc[k] = acc[k] || []).push(p.precio);
       return acc;
     }, {})
-  ).sort((a, b) => b[1] - a[1]);
+  )
+    .map(([metodo, importes]) => [metodo, sumarDinero(importes)] as const)
+    .sort((a, b) => b[1] - a[1]);
 
   const fechaCruda = formatInTimeZone(now, TZ, "EEEE d 'de' MMMM", { locale: es });
   const fechaHoy = fechaCruda.charAt(0).toUpperCase() + fechaCruda.slice(1);

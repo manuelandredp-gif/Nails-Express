@@ -1,58 +1,33 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import { z } from "zod";
 import { prisma } from "@/lib/db";
-import { getAdminSession } from "@/lib/auth";
 import { revalidatePublicSite } from "@/lib/revalidate";
+import { withManager, readJson } from "@/lib/http/api";
 
 export const dynamic = "force-dynamic";
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const session = await getAdminSession();
-    if (!session || (session.rol !== "OWNER" && session.rol !== "ADMIN")) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
-    }
+const galleryPatch = z
+  .object({
+    visible: z.boolean().optional(),
+    categoria: z.string().trim().max(60).optional(),
+    altText: z.string().trim().max(200).optional(),
+  })
+  .strict();
 
-    const { visible, categoria, altText } = await request.json();
-    const dataToUpdate: any = {};
-    if (visible !== undefined) dataToUpdate.visible = visible;
-    if (categoria !== undefined) dataToUpdate.categoria = categoria;
-    if (altText !== undefined) dataToUpdate.altText = altText;
+export const PATCH = withManager(async (req, { params }) => {
+  const b = await readJson(req, galleryPatch);
+  const data: Record<string, unknown> = {};
+  if (b.visible !== undefined) data.visible = b.visible;
+  if (b.categoria !== undefined) data.categoria = b.categoria;
+  if (b.altText !== undefined) data.altText = b.altText;
 
-    const item = await prisma.galleryItem.update({
-      where: { id: params.id },
-      data: dataToUpdate,
-    });
+  const item = await prisma.galleryItem.update({ where: { id: params.id }, data });
+  revalidatePublicSite();
+  return NextResponse.json({ success: true, item });
+});
 
-    revalidatePublicSite();
-    return NextResponse.json({ success: true, item });
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: "Error al actualizar imagen." },
-      { status: 500 }
-    );
-  }
-}
-
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const session = await getAdminSession();
-    if (!session || (session.rol !== "OWNER" && session.rol !== "ADMIN")) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
-    }
-
-    await prisma.galleryItem.delete({ where: { id: params.id } });
-    revalidatePublicSite();
-    return NextResponse.json({ success: true });
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: "Error al eliminar imagen." },
-      { status: 500 }
-    );
-  }
-}
+export const DELETE = withManager(async (_req, { params }) => {
+  await prisma.galleryItem.delete({ where: { id: params.id } });
+  revalidatePublicSite();
+  return NextResponse.json({ success: true });
+});

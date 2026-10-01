@@ -8,6 +8,14 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+/// Contadores de límite de tasa (p. ej. intentos de login), persistentes y
+/// compartidos entre todas las instancias serverless.
+model RateLimit {
+  key     String   @id
+  count   Int      @default(0)
+  resetAt DateTime
+}
+
 model User {
   id           String    @id @default(uuid())
   nombre       String

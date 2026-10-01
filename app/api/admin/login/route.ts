@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { setAdminSession } from "@/lib/auth";
 import { verifyPassword, isHashed, hashPassword } from "@/lib/infrastructure/security/password";
 import { rateLimit } from "@/lib/infrastructure/security/rate-limit";
+import { logError } from "@/lib/infrastructure/logger";
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,7 +12,7 @@ export async function POST(request: NextRequest) {
       request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
       request.headers.get("x-real-ip") ||
       "local";
-    const gate = rateLimit(`login:${ip}`, 8, 15 * 60 * 1000);
+    const gate = await rateLimit(`login:${ip}`, 8, 15 * 60 * 1000);
     if (!gate.ok) {
       return NextResponse.json(
         { error: "Demasiados intentos. Espera unos minutos e inténtalo de nuevo." },
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error: any) {
-    console.error("Login error:", error);
+    logError("login_error", error);
     return NextResponse.json(
       { error: "Error en el servidor al iniciar sesión." },
       { status: 500 }

@@ -2,6 +2,8 @@ import { addMinutes } from "date-fns";
 import crypto from "crypto";
 import { prisma } from "../db";
 import { notifications } from "./notifications.service";
+import { normalizarCelular } from "../domain/phone";
+import { logError } from "../infrastructure/logger";
 import {
   PrismaAppointmentRepository,
   PrismaCustomerRepository,
@@ -36,13 +38,8 @@ export interface CreateBookingDTO {
   estado?: "PENDIENTE" | "CONFIRMADA";
 }
 
-export function normalizePhone(phone: string): string {
-  const cleaned = phone.replace(/[^\d+]/g, "");
-  if (cleaned.startsWith("+51")) return cleaned;
-  if (cleaned.startsWith("51") && cleaned.length >= 11) return `+${cleaned}`;
-  if (cleaned.length === 9) return `+51${cleaned}`;
-  return cleaned;
-}
+// Reexportado desde el dominio para mantener un único normalizador de celulares.
+export { normalizarCelular as normalizePhone } from "@/lib/domain/phone";
 
 export function generateSecureBookingCode(): string {
   // NX- + 6 caracteres del alfabeto sin ambiguos (32^6 ≈ 1.07 mil millones)
@@ -128,7 +125,7 @@ export class BookingService {
             bookingCode: appointment.codigo,
             price: appointment.precio,
           })
-          .catch((e) => console.error("No se pudo enviar la confirmación:", e));
+          .catch((e) => logError("booking_confirmation_failed", e));
 
         return appointment;
       } catch (err: any) {
@@ -249,7 +246,7 @@ export class BookingService {
       }
 
       // 5. Upsert customer
-      const normalizedPhone = normalizePhone(celular);
+      const normalizedPhone = normalizarCelular(celular);
       let customer = await tx.customer.findUnique({
         where: { celular: normalizedPhone },
       });

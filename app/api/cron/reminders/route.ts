@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { notifications } from "@/lib/application/notifications.service";
 import { addHours, subMinutes, addMinutes } from "date-fns";
+import { logError } from "@/lib/infrastructure/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -61,7 +62,7 @@ export async function GET(request: NextRequest) {
       sentCount,
     });
   } catch (err: any) {
-    console.error("Cron error:", err);
+    logError("cron_reminders_error", err);
     return NextResponse.json(
       { error: "Error ejecutando cron de recordatorios." },
       { status: 500 }

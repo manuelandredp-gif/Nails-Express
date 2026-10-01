@@ -1,31 +1,17 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import { z } from "zod";
 import { prisma } from "@/lib/db";
-import { getAdminSession } from "@/lib/auth";
+import { withManager, readJson } from "@/lib/http/api";
 
 export const dynamic = "force-dynamic";
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const session = await getAdminSession();
-    if (!session) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    }
+const schema = z.object({ notasInternas: z.string().max(2000).nullable().optional() }).strict();
 
-    const { notasInternas } = await request.json();
-
-    const customer = await prisma.customer.update({
-      where: { id: params.id },
-      data: { notasInternas },
-    });
-
-    return NextResponse.json({ success: true, customer });
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: "Error al actualizar notas del cliente." },
-      { status: 500 }
-    );
-  }
-}
+export const PATCH = withManager(async (req, { params }) => {
+  const { notasInternas } = await readJson(req, schema);
+  const customer = await prisma.customer.update({
+    where: { id: params.id },
+    data: { notasInternas: notasInternas ?? null },
+  });
+  return NextResponse.json({ success: true, customer });
+});
