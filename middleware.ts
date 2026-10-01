@@ -84,6 +84,7 @@ const MANAGER_API_PREFIXES = [
   "/api/admin/users",
   "/api/admin/testimonials",
   "/api/admin/caja",
+  "/api/admin/maintenance",
 ];
 
 export async function middleware(request: NextRequest) {

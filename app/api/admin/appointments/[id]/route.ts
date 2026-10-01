@@ -207,6 +207,20 @@ export async function PATCH(
       logDetails.push(`Horario/Staff modificado a ${newStart.toISOString()}`);
     }
 
+    // Regla de negocio: no se puede completar una cita sin haber registrado el cobro
+    // (salvo que el cobro venga en esta misma petición).
+    if (
+      estado === "COMPLETADA" &&
+      appointment.estado !== "COMPLETADA" &&
+      !appointment.pagado &&
+      pagado !== true
+    ) {
+      return NextResponse.json(
+        { error: "Registra el cobro antes de marcar la cita como completada." },
+        { status: 409 }
+      );
+    }
+
     // 2. Status change
     if (estado && estado !== appointment.estado) {
       dataToUpdate.estado = estado;

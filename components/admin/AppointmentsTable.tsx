@@ -88,6 +88,8 @@ export default function AppointmentsTable({
   const [busyId, setBusyId] = useState<string | null>(null);
   const [reviewFor, setReviewFor] = useState<AppointmentItem | null>(null);
   const [payFor, setPayFor] = useState<AppointmentItem | null>(null);
+  // Cita que debe completarse automáticamente después de registrar su cobro.
+  const [completeAfterPay, setCompleteAfterPay] = useState<string | null>(null);
 
   const filteredAppointments = appointments.filter((app) => {
     const q = search.toLowerCase();
@@ -138,6 +140,35 @@ export default function AppointmentsTable({
       return false;
     } finally {
       setBusyId(null);
+    }
+  };
+
+  /**
+   * Completa la cita (suma el sello) y abre enseguida la evaluación de la clienta.
+   * Si aún no está cobrada, primero abre el modal de cobro y deja la cita en cola
+   * para completarse apenas se registre el pago.
+   */
+  const handleComplete = async (app: AppointmentItem) => {
+    if (!app.pagado) {
+      toast.info("Primero registra el cobro 💰 Luego se completa sola.");
+      setCompleteAfterPay(app.id);
+      setPayFor(app);
+      return;
+    }
+    const ok = await updateAppointment(app.id, { estado: "COMPLETADA" }, "Cita completada.");
+    if (ok) {
+      // Al terminar, sale la evaluación privada de la clienta.
+      setReviewFor({ ...app, estado: "COMPLETADA" });
+    }
+  };
+
+  /** Tras un cobro exitoso: si la cita estaba en cola, la completa y abre la evaluación. */
+  const afterPaySuccess = async (app: AppointmentItem) => {
+    setPayFor(null);
+    if (completeAfterPay === app.id) {
+      setCompleteAfterPay(null);
+      const ok = await updateAppointment(app.id, { estado: "COMPLETADA" }, "Cita completada.");
+      if (ok) setReviewFor({ ...app, pagado: true, estado: "COMPLETADA" });
     }
   };
 
@@ -343,12 +374,10 @@ export default function AppointmentsTable({
                       {/* Completar (solo si está activa) */}
                       {(app.estado === "CONFIRMADA" || app.estado === "PENDIENTE") && (
                         <button
-                          onClick={() =>
-                            updateAppointment(app.id, { estado: "COMPLETADA" }, "Cita completada.")
-                          }
+                          onClick={() => handleComplete(app)}
                           disabled={busyId === app.id}
                           className="px-2 py-1 rounded-lg text-[0.65rem] font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 inline-flex items-center gap-1 disabled:opacity-50"
-                          title="Marcar como completada (suma el sello)"
+                          title="Completar: pide el cobro si falta, suma el sello y abre la evaluación"
                         >
                           <Check className="w-3 h-3" /> Completar
                         </button>
@@ -435,7 +464,10 @@ export default function AppointmentsTable({
                 </p>
               </div>
               <button
-                onClick={() => setPayFor(null)}
+                onClick={() => {
+                  setPayFor(null);
+                  setCompleteAfterPay(null);
+                }}
                 className="text-gray-400 hover:text-gray-600"
               >
                 <X className="w-5 h-5" />
@@ -443,6 +475,12 @@ export default function AppointmentsTable({
             </div>
 
             <p className="text-xs text-gray-600 font-medium">¿Cómo pagó la clienta?</p>
+            {completeAfterPay === payFor.id && (
+              <p className="text-[0.7rem] text-blue-700 bg-blue-50 rounded-lg px-3 py-2">
+                Al registrar el cobro, la cita se marcará como completada (suma el
+                sello) y podrás evaluar a la clienta.
+              </p>
+            )}
             <div className="grid grid-cols-2 gap-2">
               {METODOS_PAGO.map((m) => (
                 <button
@@ -454,7 +492,7 @@ export default function AppointmentsTable({
                       { pagado: true, metodoPago: m.id },
                       `Cobro registrado (${m.label}).`
                     );
-                    if (ok) setPayFor(null);
+                    if (ok) await afterPaySuccess(payFor);
                   }}
                   className="py-3 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-sm font-bold inline-flex items-center justify-center gap-2 disabled:opacity-50"
                 >
@@ -470,7 +508,7 @@ export default function AppointmentsTable({
                   { pagado: true },
                   "Marcada como pagada."
                 );
-                if (ok) setPayFor(null);
+                if (ok) await afterPaySuccess(payFor);
               }}
               className="w-full text-[0.7rem] text-gray-400 hover:text-gray-600 underline disabled:opacity-50"
             >
