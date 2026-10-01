@@ -1,86 +1,21 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  Search,
-  Download,
-  CheckCircle,
-  MessageCircle,
-  DollarSign,
-  Star,
-  X,
-  Check,
-} from "lucide-react";
+import { Search, Download, CheckCircle, MessageCircle, DollarSign, Star, Check } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "sonner";
-
-interface AppointmentItem {
-  id: string;
-  codigo: string;
-  startAt: string;
-  endAt: string;
-  precio: number;
-  estado: string;
-  origen: string;
-  notasCliente?: string | null;
-  pagado?: boolean;
-  metodoPago?: string | null;
-  resenaEstrellas?: number | null;
-  resenaTexto?: string | null;
-  customer: {
-    nombre: string;
-    celular: string;
-  };
-  service: {
-    nombre: string;
-  };
-  staff: {
-    nombre: string;
-    color: string;
-  };
-}
+import type { AppointmentItem } from "./citas/types";
+import { METODOS_PAGO, buildReminderLink, buildReviewRequestLink } from "./citas/helpers";
+import PayModal from "./citas/PayModal";
+import ReviewModal from "./citas/ReviewModal";
 
 interface AppointmentsTableProps {
   initialAppointments: AppointmentItem[];
 }
 
-/** Arma el enlace de WhatsApp con un recordatorio prellenado para la clienta. */
-function buildReminderLink(app: AppointmentItem): string {
-  const digits = app.customer.celular.replace(/[^\d]/g, "");
-  const fecha = format(new Date(app.startAt), "EEEE d 'de' MMMM", { locale: es });
-  const hora = format(new Date(app.startAt), "HH:mm");
-  const nombre = app.customer.nombre.split(" ")[0];
-  const msg =
-    `Hola ${nombre}! 💅 Te recordamos tu cita en Nails Express ` +
-    `el ${fecha} a las ${hora} para ${app.service.nombre}. ` +
-    `¡Te esperamos! Si necesitas reprogramar, avísanos por aquí.`;
-  return `https://wa.me/${digits}?text=${encodeURIComponent(msg)}`;
-}
-
-/** Enlace de WhatsApp para pedirle una reseña a la clienta tras atenderla. */
-function buildReviewRequestLink(app: AppointmentItem): string {
-  const digits = app.customer.celular.replace(/[^\d]/g, "");
-  const nombre = app.customer.nombre.split(" ")[0];
-  const msg =
-    `Hola ${nombre}! 💕 Gracias por visitarnos en Nails Express. ` +
-    `¿Cómo quedaron tus uñas? Nos encantaría conocer tu opinión: ` +
-    `tu recomendación nos ayuda muchísimo. ¡Y recuerda que cada visita suma un sello para tu premio! 💅✨`;
-  return `https://wa.me/${digits}?text=${encodeURIComponent(msg)}`;
-}
-
-const METODOS_PAGO = [
-  { id: "EFECTIVO", label: "Efectivo", emoji: "💵" },
-  { id: "YAPE", label: "Yape", emoji: "📱" },
-  { id: "PLIN", label: "Plin", emoji: "📲" },
-  { id: "TARJETA", label: "Tarjeta", emoji: "💳" },
-];
-
-export default function AppointmentsTable({
-  initialAppointments,
-}: AppointmentsTableProps) {
-  const [appointments, setAppointments] =
-    useState<AppointmentItem[]>(initialAppointments);
+export default function AppointmentsTable({ initialAppointments }: AppointmentsTableProps) {
+  const [appointments, setAppointments] = useState<AppointmentItem[]>(initialAppointments);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [originFilter, setOriginFilter] = useState("all");
@@ -104,8 +39,7 @@ export default function AppointmentsTable({
       statusFilter === "all"
         ? showHistorial || app.estado !== "COMPLETADA"
         : app.estado === statusFilter;
-    const matchOrigin =
-      originFilter === "all" ? true : app.origen === originFilter;
+    const matchOrigin = originFilter === "all" ? true : app.origen === originFilter;
 
     return matchSearch && matchStatus && matchOrigin;
   });
@@ -124,9 +58,7 @@ export default function AppointmentsTable({
         toast.error(result.error || "No se pudo actualizar la cita.");
         return false;
       }
-      setAppointments((prev) =>
-        prev.map((a) => (a.id === id ? { ...a, ...data } : a))
-      );
+      setAppointments((prev) => prev.map((a) => (a.id === id ? { ...a, ...data } : a)));
       if (result.loyalty?.reward) {
         toast.success("¡Cita completada! La clienta ganó un premio 🎁");
       } else if (result.loyalty) {
@@ -145,8 +77,7 @@ export default function AppointmentsTable({
 
   /**
    * Completa la cita (suma el sello) y abre enseguida la evaluación de la clienta.
-   * Si aún no está cobrada, primero abre el modal de cobro y deja la cita en cola
-   * para completarse apenas se registre el pago.
+   * Si aún no está cobrada, primero abre el modal de cobro y deja la cita en cola.
    */
   const handleComplete = async (app: AppointmentItem) => {
     if (!app.pagado) {
@@ -156,35 +87,28 @@ export default function AppointmentsTable({
       return;
     }
     const ok = await updateAppointment(app.id, { estado: "COMPLETADA" }, "Cita completada.");
-    if (ok) {
-      // Al terminar, sale la evaluación privada de la clienta.
-      setReviewFor({ ...app, estado: "COMPLETADA" });
-    }
+    if (ok) setReviewFor({ ...app, estado: "COMPLETADA" });
   };
 
-  /** Tras un cobro exitoso: si la cita estaba en cola, la completa y abre la evaluación. */
-  const afterPaySuccess = async (app: AppointmentItem) => {
+  // Registra el cobro desde el modal; si la cita estaba en cola, la completa y evalúa.
+  const handlePay = async (app: AppointmentItem, metodoPago: string | null) => {
+    const data = metodoPago ? { pagado: true, metodoPago } : { pagado: true };
+    const ok = await updateAppointment(
+      app.id,
+      data,
+      metodoPago ? `Cobro registrado (${METODOS_PAGO.find((m) => m.id === metodoPago)?.label}).` : "Marcada como pagada."
+    );
+    if (!ok) return;
     setPayFor(null);
     if (completeAfterPay === app.id) {
       setCompleteAfterPay(null);
-      const ok = await updateAppointment(app.id, { estado: "COMPLETADA" }, "Cita completada.");
-      if (ok) setReviewFor({ ...app, pagado: true, estado: "COMPLETADA" });
+      const done = await updateAppointment(app.id, { estado: "COMPLETADA" }, "Cita completada.");
+      if (done) setReviewFor({ ...app, pagado: true, estado: "COMPLETADA" });
     }
   };
 
   const exportCsv = () => {
-    const headers = [
-      "Codigo",
-      "Cliente",
-      "Celular",
-      "Servicio",
-      "Manicurista",
-      "Fecha",
-      "Hora",
-      "Precio",
-      "Estado",
-      "Origen",
-    ];
+    const headers = ["Codigo", "Cliente", "Celular", "Servicio", "Manicurista", "Fecha", "Hora", "Precio", "Estado", "Origen"];
     const rows = filteredAppointments.map((a) => [
       a.codigo,
       `"${a.customer.nombre}"`,
@@ -197,18 +121,11 @@ export default function AppointmentsTable({
       a.estado,
       a.origen,
     ]);
-
     const csvContent =
-      "data:text/csv;charset=utf-8," +
-      [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
-
-    const encodedUri = encodeURI(csvContent);
+      "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute(
-      "download",
-      `citas_nails_express_${format(new Date(), "yyyyMMdd")}.csv`
-    );
+    link.setAttribute("href", encodeURI(csvContent));
+    link.setAttribute("download", `citas_nails_express_${format(new Date(), "yyyyMMdd")}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -217,9 +134,8 @@ export default function AppointmentsTable({
 
   return (
     <div className="space-y-4">
-      {/* Search and Filters Bar */}
+      {/* Búsqueda y filtros */}
       <div className="bg-white p-4 rounded-[16px] border border-[#ECECEC] flex flex-wrap items-center justify-between gap-4">
-        {/* Search Input */}
         <div className="relative flex-1 min-w-[240px]">
           <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
@@ -231,9 +147,7 @@ export default function AppointmentsTable({
           />
         </div>
 
-        {/* Filters */}
         <div className="flex flex-wrap items-center gap-2">
-          {/* Status Filter */}
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
@@ -246,7 +160,6 @@ export default function AppointmentsTable({
             <option value="NO_ASISTIO">No asistió</option>
           </select>
 
-          {/* Origin Filter */}
           <select
             value={originFilter}
             onChange={(e) => setOriginFilter(e.target.value)}
@@ -259,13 +172,10 @@ export default function AppointmentsTable({
             <option value="TELEFONO">Teléfono</option>
           </select>
 
-          {/* Toggle historial (completadas) */}
           <button
             onClick={() => setShowHistorial((v) => !v)}
             className={`text-xs py-2 px-3 inline-flex items-center gap-1.5 rounded-lg border transition-colors ${
-              showHistorial
-                ? "bg-primary text-white border-primary"
-                : "border-gray-200 text-gray-600 hover:border-primary"
+              showHistorial ? "bg-primary text-white border-primary" : "border-gray-200 text-gray-600 hover:border-primary"
             }`}
             title="Mostrar u ocultar las citas completadas"
           >
@@ -273,18 +183,14 @@ export default function AppointmentsTable({
             <span>{showHistorial ? "Ocultar completadas" : "Ver historial"}</span>
           </button>
 
-          {/* Export Button */}
-          <button
-            onClick={exportCsv}
-            className="btn-outline text-xs py-2 px-3 inline-flex items-center gap-1.5"
-          >
+          <button onClick={exportCsv} className="btn-outline text-xs py-2 px-3 inline-flex items-center gap-1.5">
             <Download className="w-3.5 h-3.5" />
             <span>Exportar CSV</span>
           </button>
         </div>
       </div>
 
-      {/* Table */}
+      {/* Tabla */}
       <div className="bg-white rounded-[16px] border border-[#ECECEC] overflow-hidden shadow-2xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
@@ -303,45 +209,29 @@ export default function AppointmentsTable({
             <tbody className="divide-y divide-gray-100">
               {filteredAppointments.map((app) => (
                 <tr key={app.id} className="hover:bg-gray-50/50 transition-colors">
-                  <td className="py-3.5 px-4 font-mono font-bold text-primary">
-                    {app.codigo}
-                  </td>
+                  <td className="py-3.5 px-4 font-mono font-bold text-primary">{app.codigo}</td>
                   <td className="py-3.5 px-4">
-                    <p className="font-bold text-[#1A1A1A]">
-                      {app.customer.nombre}
-                    </p>
-                    <p className="text-[0.7rem] text-gray-500">
-                      {app.customer.celular}
-                    </p>
+                    <p className="font-bold text-[#1A1A1A]">{app.customer.nombre}</p>
+                    <p className="text-[0.7rem] text-gray-500">{app.customer.celular}</p>
                   </td>
-                  <td className="py-3.5 px-4 font-semibold text-[#1A1A1A]">
-                    {app.service.nombre}
-                  </td>
+                  <td className="py-3.5 px-4 font-semibold text-[#1A1A1A]">{app.service.nombre}</td>
                   <td className="py-3.5 px-4">
                     <p className="font-medium text-[#1A1A1A] capitalize">
-                      {format(new Date(app.startAt), "d 'de' MMM, yyyy", {
-                        locale: es,
-                      })}
+                      {format(new Date(app.startAt), "d 'de' MMM, yyyy", { locale: es })}
                     </p>
                     <p className="text-[0.7rem] text-gray-500">
-                      {format(new Date(app.startAt), "HH:mm")} -{" "}
-                      {format(new Date(app.endAt), "HH:mm")}
+                      {format(new Date(app.startAt), "HH:mm")} - {format(new Date(app.endAt), "HH:mm")}
                     </p>
                   </td>
                   <td className="py-3.5 px-4">
                     <span
                       className="px-2 py-0.5 rounded-full text-[0.65rem] font-bold"
-                      style={{
-                        backgroundColor: `${app.staff.color}20`,
-                        color: app.staff.color,
-                      }}
+                      style={{ backgroundColor: `${app.staff.color}20`, color: app.staff.color }}
                     >
                       {app.staff.nombre}
                     </span>
                   </td>
-                  <td className="py-3.5 px-4 font-bold text-[#E8707A]">
-                    S/ {app.precio.toFixed(0)}
-                  </td>
+                  <td className="py-3.5 px-4 font-bold text-[#E8707A]">S/ {app.precio.toFixed(0)}</td>
                   <td className="py-3.5 px-4">
                     <div className="flex flex-col items-start gap-1">
                       <span
@@ -371,7 +261,6 @@ export default function AppointmentsTable({
                   </td>
                   <td className="py-3.5 px-4 text-right">
                     <div className="flex items-center justify-end gap-1">
-                      {/* Completar (solo si está activa) */}
                       {(app.estado === "CONFIRMADA" || app.estado === "PENDIENTE") && (
                         <button
                           onClick={() => handleComplete(app)}
@@ -382,16 +271,11 @@ export default function AppointmentsTable({
                           <Check className="w-3 h-3" /> Completar
                         </button>
                       )}
-                      {/* Pagado: al cobrar pregunta el método; si ya está pagado permite anular */}
                       <button
                         onClick={() => {
                           if (app.pagado) {
                             if (window.confirm("¿Anular el cobro de esta cita?")) {
-                              updateAppointment(
-                                app.id,
-                                { pagado: false, metodoPago: null },
-                                "Cobro anulado."
-                              );
+                              updateAppointment(app.id, { pagado: false, metodoPago: null }, "Cobro anulado.");
                             }
                           } else {
                             setPayFor(app);
@@ -407,7 +291,6 @@ export default function AppointmentsTable({
                       >
                         <DollarSign className="w-3 h-3" /> {app.pagado ? "Pagado" : "Cobrar"}
                       </button>
-                      {/* Reseña privada */}
                       <button
                         onClick={() => setReviewFor(app)}
                         className="px-2 py-1 rounded-lg text-[0.65rem] font-bold bg-amber-50 text-amber-700 hover:bg-amber-100 inline-flex items-center gap-1"
@@ -416,28 +299,15 @@ export default function AppointmentsTable({
                         <Star className={`w-3 h-3 ${app.resenaEstrellas ? "fill-amber-500 text-amber-500" : ""}`} />
                         {app.resenaEstrellas ? app.resenaEstrellas : "Reseña"}
                       </button>
-                      {/* WhatsApp: recordatorio si está pendiente, pedir reseña si ya se atendió */}
-                      {app.estado === "COMPLETADA" ? (
-                        <a
-                          href={buildReviewRequestLink(app)}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="px-2 py-1 rounded-lg text-[0.65rem] font-bold bg-green-50 text-green-700 hover:bg-green-100 inline-flex items-center gap-1"
-                          title="Pedirle su opinión por WhatsApp"
-                        >
-                          <MessageCircle className="w-3 h-3" /> Pedir reseña
-                        </a>
-                      ) : (
-                        <a
-                          href={buildReminderLink(app)}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="px-2 py-1 rounded-lg text-[0.65rem] font-bold bg-green-50 text-green-700 hover:bg-green-100 inline-flex items-center gap-1"
-                          title="Enviar recordatorio por WhatsApp"
-                        >
-                          <MessageCircle className="w-3 h-3" /> Recordar
-                        </a>
-                      )}
+                      <a
+                        href={app.estado === "COMPLETADA" ? buildReviewRequestLink(app) : buildReminderLink(app)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-2 py-1 rounded-lg text-[0.65rem] font-bold bg-green-50 text-green-700 hover:bg-green-100 inline-flex items-center gap-1"
+                        title={app.estado === "COMPLETADA" ? "Pedirle su opinión por WhatsApp" : "Enviar recordatorio por WhatsApp"}
+                      >
+                        <MessageCircle className="w-3 h-3" /> {app.estado === "COMPLETADA" ? "Pedir reseña" : "Recordar"}
+                      </a>
                     </div>
                   </td>
                 </tr>
@@ -454,68 +324,16 @@ export default function AppointmentsTable({
       </div>
 
       {payFor && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-[20px] max-w-sm w-full p-6 space-y-4 shadow-2xl">
-            <div className="flex items-start justify-between border-b pb-3">
-              <div>
-                <h3 className="text-lg font-bold text-[#1A1A1A]">Registrar cobro</h3>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  {payFor.customer.nombre} · S/ {payFor.precio.toFixed(0)}
-                </p>
-              </div>
-              <button
-                onClick={() => {
-                  setPayFor(null);
-                  setCompleteAfterPay(null);
-                }}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <p className="text-xs text-gray-600 font-medium">¿Cómo pagó la clienta?</p>
-            {completeAfterPay === payFor.id && (
-              <p className="text-[0.7rem] text-blue-700 bg-blue-50 rounded-lg px-3 py-2">
-                Al registrar el cobro, la cita se marcará como completada (suma el
-                sello) y podrás evaluar a la clienta.
-              </p>
-            )}
-            <div className="grid grid-cols-2 gap-2">
-              {METODOS_PAGO.map((m) => (
-                <button
-                  key={m.id}
-                  disabled={busyId === payFor.id}
-                  onClick={async () => {
-                    const ok = await updateAppointment(
-                      payFor.id,
-                      { pagado: true, metodoPago: m.id },
-                      `Cobro registrado (${m.label}).`
-                    );
-                    if (ok) await afterPaySuccess(payFor);
-                  }}
-                  className="py-3 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-sm font-bold inline-flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                  <span>{m.emoji}</span> {m.label}
-                </button>
-              ))}
-            </div>
-            <button
-              disabled={busyId === payFor.id}
-              onClick={async () => {
-                const ok = await updateAppointment(
-                  payFor.id,
-                  { pagado: true },
-                  "Marcada como pagada."
-                );
-                if (ok) await afterPaySuccess(payFor);
-              }}
-              className="w-full text-[0.7rem] text-gray-400 hover:text-gray-600 underline disabled:opacity-50"
-            >
-              Solo marcar como pagada (sin método)
-            </button>
-          </div>
-        </div>
+        <PayModal
+          appointment={payFor}
+          busy={busyId === payFor.id}
+          completeAfterPay={completeAfterPay === payFor.id}
+          onClose={() => {
+            setPayFor(null);
+            setCompleteAfterPay(null);
+          }}
+          onPay={(metodoPago) => handlePay(payFor, metodoPago)}
+        />
       )}
 
       {reviewFor && (
@@ -533,85 +351,6 @@ export default function AppointmentsTable({
           }}
         />
       )}
-    </div>
-  );
-}
-
-function ReviewModal({
-  appointment,
-  busy,
-  onClose,
-  onSave,
-}: {
-  appointment: AppointmentItem;
-  busy: boolean;
-  onClose: () => void;
-  onSave: (estrellas: number | null, texto: string) => void;
-}) {
-  const [estrellas, setEstrellas] = useState<number>(appointment.resenaEstrellas || 0);
-  const [texto, setTexto] = useState<string>(appointment.resenaTexto || "");
-
-  return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-[20px] max-w-md w-full p-6 space-y-4 shadow-2xl">
-        <div className="flex items-start justify-between border-b pb-3">
-          <div>
-            <h3 className="text-lg font-bold text-[#1A1A1A]">Reseña privada</h3>
-            <p className="text-xs text-gray-500 mt-0.5">
-              {appointment.customer.nombre} · {appointment.service.nombre}
-            </p>
-          </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <p className="text-[0.7rem] text-gray-400">
-          Solo la ves vos en el panel. No se publica en la web.
-        </p>
-
-        <div>
-          <label className="block text-xs font-semibold text-gray-700 mb-1.5">Calificación</label>
-          <div className="flex items-center gap-1">
-            {[1, 2, 3, 4, 5].map((n) => (
-              <button
-                key={n}
-                type="button"
-                onClick={() => setEstrellas(n === estrellas ? 0 : n)}
-                className="p-1"
-              >
-                <Star
-                  className={`w-7 h-7 ${n <= estrellas ? "fill-amber-400 text-amber-400" : "text-gray-300"}`}
-                />
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-xs font-semibold text-gray-700 mb-1">Nota</label>
-          <textarea
-            rows={4}
-            value={texto}
-            onChange={(e) => setTexto(e.target.value)}
-            placeholder="Ej. Clienta muy puntual, le gustó el tono nude, volver a ofrecer diseño floral."
-            className="w-full px-3 py-2 text-xs border rounded-lg outline-none focus:border-primary resize-none"
-          />
-        </div>
-
-        <div className="flex justify-end gap-2 pt-2 border-t">
-          <button onClick={onClose} className="btn-outline text-xs py-2 px-4">
-            Cancelar
-          </button>
-          <button
-            onClick={() => onSave(estrellas || null, texto)}
-            disabled={busy}
-            className="btn-primary text-xs py-2 px-5 disabled:opacity-50"
-          >
-            {busy ? "Guardando..." : "Guardar reseña"}
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
