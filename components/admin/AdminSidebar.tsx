@@ -19,6 +19,9 @@ import {
   Menu,
   X,
   UserCheck,
+  Wallet,
+  Star,
+  KeyRound,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -35,18 +38,34 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const navItems = [
-    { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
+  const isManager = user.rol === "OWNER" || user.rol === "ADMIN";
+
+  // Links visibles para todos los usuarios (incluye trabajadoras).
+  const baseItems = [
     { name: "Agenda", href: "/admin/agenda", icon: Calendar },
     { name: "Citas", href: "/admin/citas", icon: Clock },
+  ];
+
+  const accountItem = { name: "Mi cuenta", href: "/admin/cuenta", icon: KeyRound };
+
+  // Links solo para la dueña / administración.
+  const managerItems = [
+    { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
+    { name: "Caja", href: "/admin/caja", icon: Wallet },
     { name: "Clientes", href: "/admin/clientes", icon: Users },
     { name: "Servicios", href: "/admin/servicios", icon: Scissors },
     { name: "Blog / Publicaciones", href: "/admin/publicaciones", icon: FileText },
     { name: "Galería", href: "/admin/galeria", icon: ImageIcon },
     { name: "Preguntas Frecuentes", href: "/admin/faq", icon: HelpCircle },
+    { name: "Testimonios", href: "/admin/testimonios", icon: Star },
     { name: "Horarios y Equipo", href: "/admin/horarios", icon: CalendarRange },
+    { name: "Equipo / Accesos", href: "/admin/equipo", icon: UserCheck },
     { name: "Configuración", href: "/admin/configuracion", icon: Settings },
   ];
+
+  const navItems = isManager
+    ? [managerItems[0], ...baseItems, ...managerItems.slice(1), accountItem]
+    : [...baseItems, accountItem];
 
   const handleLogout = async () => {
     try {

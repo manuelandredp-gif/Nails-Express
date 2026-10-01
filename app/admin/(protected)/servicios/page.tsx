@@ -1,10 +1,12 @@
 import React from "react";
 import { prisma } from "@/lib/db";
+import { requireManager } from "@/lib/auth";
 import ServicesManager from "@/components/admin/ServicesManager";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminServiciosPage() {
+  await requireManager();
   const [services, categories, allStaff] = await Promise.all([
     prisma.service.findMany({
       include: {

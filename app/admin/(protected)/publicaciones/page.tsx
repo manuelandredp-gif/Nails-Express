@@ -1,10 +1,12 @@
 import React from "react";
 import { prisma } from "@/lib/db";
+import { requireManager } from "@/lib/auth";
 import BlogPostsManager from "@/components/admin/BlogPostsManager";
 
 export const dynamic = "force-dynamic";
 
 export default async function PublicacionesPage() {
+  await requireManager();
   const posts = await prisma.post.findMany({
     orderBy: { fechaPublicacion: "desc" },
   });

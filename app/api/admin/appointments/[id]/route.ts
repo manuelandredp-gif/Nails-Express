@@ -64,9 +64,13 @@ export async function PATCH(
       );
     }
 
-    // Role MANICURISTA can only mark completed or no-show
-    if (session.rol === "MANICURISTA") {
-      if (appointment.staffId !== session.staffId) {
+    const isManagerRole = session.rol === "OWNER" || session.rol === "ADMIN";
+
+    // Las trabajadoras solo pueden gestionar citas (atender, cobrar, reseñar),
+    // nunca reprogramar, reasignar ni cancelar.
+    if (!isManagerRole) {
+      // Si la trabajadora está vinculada a una manicurista, solo sus propias citas.
+      if (session.staffId && appointment.staffId !== session.staffId) {
         return NextResponse.json(
           { error: "Solo puedes modificar tus propias citas." },
           { status: 403 }
@@ -75,7 +79,7 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const {
+    let {
       estado,
       startAt,
       endAt,
@@ -86,6 +90,23 @@ export async function PATCH(
       resenaEstrellas,
       resenaTexto,
     } = body;
+
+    // Restricción de campos para trabajadoras.
+    if (!isManagerRole) {
+      // No pueden mover el horario ni reasignar la manicurista.
+      startAt = undefined;
+      endAt = undefined;
+      staffId = undefined;
+      notasInternas = undefined;
+      motivoCancelacion = undefined;
+      // Solo pueden marcar como COMPLETADA o NO_ASISTIO.
+      if (estado && estado !== "COMPLETADA" && estado !== "NO_ASISTIO") {
+        return NextResponse.json(
+          { error: "No tienes permiso para este cambio de estado." },
+          { status: 403 }
+        );
+      }
+    }
 
     const dataToUpdate: any = {};
     const logDetails: string[] = [];

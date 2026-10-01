@@ -1,10 +1,31 @@
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { prisma } from "./db";
 import { JwtService, SessionPayload } from "./infrastructure/security/jwt.service";
 
 export type AdminSession = Omit<SessionPayload, "exp">;
 
 const COOKIE_NAME = "nails_admin_session";
+
+/** OWNER y ADMIN tienen acceso total (caja, edición, configuración). */
+export function isManager(rol?: string | null): boolean {
+  return rol === "OWNER" || rol === "ADMIN";
+}
+
+/** Páginas solo para dueña/admin: redirige a las trabajadoras a su vista de citas. */
+export async function requireManager(): Promise<AdminSession> {
+  const session = await getAdminSession();
+  if (!session) redirect("/admin/login");
+  if (!isManager(session.rol)) redirect("/admin/citas");
+  return session;
+}
+
+/** Páginas para cualquier usuario logueado (incluye trabajadoras). */
+export async function requireSession(): Promise<AdminSession> {
+  const session = await getAdminSession();
+  if (!session) redirect("/admin/login");
+  return session;
+}
 
 export async function getAdminSession(): Promise<AdminSession | null> {
   const cookieStore = cookies();

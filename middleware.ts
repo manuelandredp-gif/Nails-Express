@@ -17,11 +17,14 @@ function b64urlToBytes(s: string): Uint8Array {
   return bytes;
 }
 
-/** Verifica la firma HMAC-SHA256 y la expiración del token (compatible con Edge). */
-async function verifyToken(token: string): Promise<boolean> {
+/**
+ * Verifica la firma HMAC-SHA256 y la expiración del token (compatible con Edge).
+ * Devuelve el payload decodificado si es válido, o null.
+ */
+async function verifyToken(token: string): Promise<any | null> {
   try {
     const parts = token.split(".");
-    if (parts.length !== 3) return false;
+    if (parts.length !== 3) return null;
     const [header, payload, signature] = parts;
 
     const key = await crypto.subtle.importKey(
@@ -37,29 +40,99 @@ async function verifyToken(token: string): Promise<boolean> {
       b64urlToBytes(signature) as unknown as BufferSource,
       new TextEncoder().encode(`${header}.${payload}`) as unknown as BufferSource
     );
-    if (!valid) return false;
+    if (!valid) return null;
 
     const decoded = JSON.parse(
       new TextDecoder().decode(b64urlToBytes(payload) as unknown as BufferSource)
     );
-    if (decoded.exp && decoded.exp < Math.floor(Date.now() / 1000)) return false;
-    return true;
+    if (decoded.exp && decoded.exp < Math.floor(Date.now() / 1000)) return null;
+    return decoded;
   } catch {
-    return false;
+    return null;
   }
 }
+
+function isManager(rol?: string): boolean {
+  return rol === "OWNER" || rol === "ADMIN";
+}
+
+// Secciones reservadas a la dueña / administración (las trabajadoras no acceden).
+const MANAGER_PAGE_PREFIXES = [
+  "/admin/caja",
+  "/admin/clientes",
+  "/admin/servicios",
+  "/admin/publicaciones",
+  "/admin/galeria",
+  "/admin/faq",
+  "/admin/testimonios",
+  "/admin/horarios",
+  "/admin/equipo",
+  "/admin/configuracion",
+];
+
+const MANAGER_API_PREFIXES = [
+  "/api/admin/settings",
+  "/api/admin/services",
+  "/api/admin/faq",
+  "/api/admin/gallery",
+  "/api/admin/posts",
+  "/api/admin/staff",
+  "/api/admin/customers",
+  "/api/admin/business-hours",
+  "/api/admin/timeblocks",
+  "/api/admin/upload",
+  "/api/admin/users",
+  "/api/admin/testimonials",
+  "/api/admin/caja",
+];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login")) {
-    const token = request.cookies.get(COOKIE_NAME)?.value;
-    const ok = token ? await verifyToken(token) : false;
+  const isAdminArea =
+    (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login")) ||
+    pathname.startsWith("/api/admin");
 
-    if (!ok) {
-      const loginUrl = new URL("/admin/login", request.url);
-      loginUrl.searchParams.set("from", pathname);
-      return NextResponse.redirect(loginUrl);
+  // Las rutas de login/logout de la API no requieren sesión.
+  if (
+    pathname.startsWith("/api/admin/login") ||
+    pathname.startsWith("/api/admin/logout")
+  ) {
+    return NextResponse.next();
+  }
+
+  if (!isAdminArea) return NextResponse.next();
+
+  const token = request.cookies.get(COOKIE_NAME)?.value;
+  const payload = token ? await verifyToken(token) : null;
+  const isApi = pathname.startsWith("/api/");
+
+  // No autenticado
+  if (!payload) {
+    if (isApi) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+    const loginUrl = new URL("/admin/login", request.url);
+    loginUrl.searchParams.set("from", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // Autenticado pero sin permisos de administración
+  const manager = isManager(payload.rol);
+
+  if (!manager) {
+    const dashboardBlocked = pathname === "/admin";
+    const pageBlocked = MANAGER_PAGE_PREFIXES.some((p) => pathname.startsWith(p));
+    const apiBlocked = MANAGER_API_PREFIXES.some((p) => pathname.startsWith(p));
+
+    if (apiBlocked) {
+      return NextResponse.json(
+        { error: "No tienes permiso para esta acción." },
+        { status: 403 }
+      );
+    }
+    if (dashboardBlocked || pageBlocked) {
+      return NextResponse.redirect(new URL("/admin/citas", request.url));
     }
   }
 
@@ -67,5 +140,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin/:path*", "/api/admin/:path*"],
 };

@@ -1,10 +1,12 @@
 import React from "react";
 import { prisma } from "@/lib/db";
+import { requireManager } from "@/lib/auth";
 import CustomersManager from "@/components/admin/CustomersManager";
 
 export const dynamic = "force-dynamic";
 
 export default async function ClientesPage() {
+  await requireManager();
   const customers = await prisma.customer.findMany({
     include: {
       citas: {

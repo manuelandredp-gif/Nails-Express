@@ -11,10 +11,12 @@ import LiveSalonTracker from "@/components/admin/dashboard/LiveSalonTracker";
 import TodayScheduleTable from "@/components/admin/dashboard/TodayScheduleTable";
 import TopServicesWidget from "@/components/admin/dashboard/TopServicesWidget";
 import RevenueChart from "@/components/admin/dashboard/RevenueChart";
+import { requireManager } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
+  await requireManager();
   const now = new Date();
   const weekAgo = startOfDay(subDays(now, 6));
   const [metrics, settings, weekAppts] = await Promise.all([

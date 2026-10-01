@@ -44,6 +44,19 @@ interface AppointmentsTableProps {
   initialAppointments: AppointmentItem[];
 }
 
+/** Arma el enlace de WhatsApp con un recordatorio prellenado para la clienta. */
+function buildReminderLink(app: AppointmentItem): string {
+  const digits = app.customer.celular.replace(/[^\d]/g, "");
+  const fecha = format(new Date(app.startAt), "EEEE d 'de' MMMM", { locale: es });
+  const hora = format(new Date(app.startAt), "HH:mm");
+  const nombre = app.customer.nombre.split(" ")[0];
+  const msg =
+    `Hola ${nombre}! 💅 Te recordamos tu cita en Nails Express ` +
+    `el ${fecha} a las ${hora} para ${app.service.nombre}. ` +
+    `¡Te esperamos! Si necesitas reprogramar, avísanos por aquí.`;
+  return `https://wa.me/${digits}?text=${encodeURIComponent(msg)}`;
+}
+
 export default function AppointmentsTable({
   initialAppointments,
 }: AppointmentsTableProps) {
@@ -343,15 +356,15 @@ export default function AppointmentsTable({
                         <Star className={`w-3 h-3 ${app.resenaEstrellas ? "fill-amber-500 text-amber-500" : ""}`} />
                         {app.resenaEstrellas ? app.resenaEstrellas : "Reseña"}
                       </button>
-                      {/* WhatsApp */}
+                      {/* Recordatorio por WhatsApp (mensaje prellenado) */}
                       <a
-                        href={`https://wa.me/${app.customer.celular.replace(/[^\d]/g, "")}`}
+                        href={buildReminderLink(app)}
                         target="_blank"
                         rel="noreferrer"
-                        className="p-1.5 text-gray-400 hover:text-green-600 inline-block"
-                        title="Contactar WhatsApp"
+                        className="px-2 py-1 rounded-lg text-[0.65rem] font-bold bg-green-50 text-green-700 hover:bg-green-100 inline-flex items-center gap-1"
+                        title="Enviar recordatorio por WhatsApp"
                       >
-                        <MessageCircle className="w-4 h-4" />
+                        <MessageCircle className="w-3 h-3" /> Recordar
                       </a>
                     </div>
                   </td>
