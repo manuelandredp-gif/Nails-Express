@@ -1,17 +1,47 @@
 import React from "react";
 import { dashboardService } from "@/lib/application/dashboard.service";
+import { getSiteSettings } from "@/lib/site-content";
+import { prisma } from "@/lib/db";
+import { startOfDay, endOfDay, subDays, format } from "date-fns";
+import { es } from "date-fns/locale";
 import DashboardHeader from "@/components/admin/dashboard/DashboardHeader";
 import SalonCapacityBar from "@/components/admin/dashboard/SalonCapacityBar";
 import DashboardKpiGrid from "@/components/admin/dashboard/DashboardKpiGrid";
 import LiveSalonTracker from "@/components/admin/dashboard/LiveSalonTracker";
 import TodayScheduleTable from "@/components/admin/dashboard/TodayScheduleTable";
 import TopServicesWidget from "@/components/admin/dashboard/TopServicesWidget";
+import RevenueChart from "@/components/admin/dashboard/RevenueChart";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
   const now = new Date();
-  const metrics = await dashboardService.getDashboardMetrics(now);
+  const weekAgo = startOfDay(subDays(now, 6));
+  const [metrics, settings, weekAppts] = await Promise.all([
+    dashboardService.getDashboardMetrics(now),
+    getSiteSettings(),
+    prisma.appointment.findMany({
+      where: {
+        estado: { in: ["CONFIRMADA", "COMPLETADA"] },
+        startAt: { gte: weekAgo, lte: endOfDay(now) },
+      },
+      select: { startAt: true, precio: true },
+    }),
+  ]);
+
+  // Serie de ingresos de los últimos 7 días
+  const revenueSeries = Array.from({ length: 7 }).map((_, idx) => {
+    const day = subDays(now, 6 - idx);
+    const dStart = startOfDay(day).getTime();
+    const dEnd = endOfDay(day).getTime();
+    const monto = weekAppts
+      .filter((a) => {
+        const t = new Date(a.startAt).getTime();
+        return t >= dStart && t <= dEnd;
+      })
+      .reduce((acc, a) => acc + a.precio, 0);
+    return { label: format(day, "EEE", { locale: es }), monto };
+  });
 
   const confirmedCount = metrics.todayAppointments.filter(
     (a) => a.estado === "CONFIRMADA"
@@ -47,6 +77,11 @@ export default async function AdminDashboardPage() {
         noShowRate={metrics.noShowRate}
         allNoShowCount={metrics.allNoShowCount}
         totalFinished={metrics.totalFinished}
+        badgeCitasHoy={settings.dashBadgeCitasHoy}
+        subCitasHoy={settings.dashSubCitasHoy}
+        badgeSemana={settings.dashBadgeSemana}
+        badgeIngresos={settings.dashBadgeIngresos}
+        badgeInasistencia={settings.dashBadgeInasistencia}
       />
 
       {/* 4. Live Salon Tracker */}
@@ -56,6 +91,9 @@ export default async function AdminDashboardPage() {
         activeElapsedPercent={metrics.activeElapsedPercent}
         nextApp={metrics.nextApp}
       />
+
+      {/* 4b. Gráfico de ingresos de la semana */}
+      <RevenueChart data={revenueSeries} currency={metrics.currency} />
 
       {/* 5. Main Content: Today's Schedule (8 cols) & Top Services (4 cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">

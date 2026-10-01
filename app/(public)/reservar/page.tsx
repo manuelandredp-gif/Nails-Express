@@ -62,6 +62,9 @@ export default async function ReservarPage({
           staffList={staffList}
           currency={settings?.moneda || "S/"}
           preselectedSlug={searchParams.service}
+          nombreNegocio={settings?.nombreNegocio}
+          direccion={settings?.direccion}
+          whatsapp={settings?.whatsapp}
         />
       </Suspense>
     </div>

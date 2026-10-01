@@ -1,8 +1,15 @@
 import { prisma } from "../db";
-import { parseISO, addMinutes, format, isBefore, isAfter, startOfDay, endOfDay } from "date-fns";
-import { toZonedTime, fromZonedTime } from "date-fns-tz";
+import { addMinutes, isBefore, isAfter } from "date-fns";
+import { fromZonedTime, toZonedTime, formatInTimeZone } from "date-fns-tz";
 
 export const TIMEZONE = "America/Lima";
+
+const pad = (n: number) => String(n).padStart(2, "0");
+
+/** Instante UTC correspondiente a una hora de pared (dateStr HH:mm:ss) en America/Lima. */
+function limaInstant(dateStr: string, h: number, m: number, s = 0): Date {
+  return fromZonedTime(`${dateStr}T${pad(h)}:${pad(m)}:${pad(s)}`, TIMEZONE);
+}
 
 export interface TimeSlot {
   time: string; // "10:00"
@@ -81,9 +88,12 @@ export async function getAvailableSlots(params: {
   const month = parseInt(monthStr, 10) - 1;
   const day = parseInt(dayNumStr, 10);
 
-  // Reference date in America/Lima
-  const targetDateLocal = new Date(year, month, day, 12, 0, 0);
-  const dayOfWeek = targetDateLocal.getDay(); // 0 = Domingo, 1 = Lunes, ...
+  // Día de la semana en America/Lima (mediodía Lima evita bordes de zona)
+  void year;
+  void month;
+  void day;
+  const noonLima = limaInstant(dateStr, 12, 0);
+  const dayOfWeek = toZonedTime(noonLima, TIMEZONE).getDay(); // 0=Domingo ... 6=Sábado
 
   // 4. Fetch business hours for this day of week
   const businessHours = await prisma.businessHours.findFirst({
@@ -99,9 +109,9 @@ export async function getAvailableSlots(params: {
   const [closeHour, closeMin] = businessHours.horaCierre.split(":").map(Number);
 
   // 5. Query existing active appointments for target date
-  // Construct search window in UTC from start of day to end of day in Lima
-  const startOfDayLocal = new Date(year, month, day, 0, 0, 0);
-  const endOfDayLocal = new Date(year, month, day, 23, 59, 59);
+  // Ventana de búsqueda: inicio y fin del día en America/Lima, como instantes UTC.
+  const startOfDayLocal = limaInstant(dateStr, 0, 0, 0);
+  const endOfDayLocal = limaInstant(dateStr, 23, 59, 59);
 
   const appointments = await prisma.appointment.findMany({
     where: {
@@ -130,8 +140,8 @@ export async function getAvailableSlots(params: {
   // 6. Generate time slots
   const slots: TimeSlot[] = [];
 
-  let currentSlotLocal = new Date(year, month, day, openHour, openMin, 0);
-  const closingTimeLocal = new Date(year, month, day, closeHour, closeMin, 0);
+  let currentSlotLocal = limaInstant(dateStr, openHour, openMin, 0);
+  const closingTimeLocal = limaInstant(dateStr, closeHour, closeMin, 0);
 
   while (true) {
     const slotEndLocal = addMinutes(currentSlotLocal, totalDurationMinutes);
@@ -141,7 +151,7 @@ export async function getAvailableSlots(params: {
       break;
     }
 
-    const timeLabel = format(currentSlotLocal, "HH:mm");
+    const timeLabel = formatInTimeZone(currentSlotLocal, TIMEZONE, "HH:mm");
     const isPastMinNotice = isBefore(currentSlotLocal, minBookingTime);
 
     // Check which staff members are free for this slot

@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { normalizePhone } from "@/lib/application/booking.service";
+import { getLoyaltyForCustomer } from "@/lib/application/loyalty.service";
 import { differenceInHours, addMinutes } from "date-fns";
 
 export const dynamic = "force-dynamic";
+
+/** Compara teléfonos por sus últimos 9 dígitos (número local de Perú). */
+function phoneMatches(stored: string, provided: string | null | undefined): boolean {
+  if (!provided) return false;
+  const a = normalizePhone(stored).replace(/\D/g, "");
+  const b = normalizePhone(provided).replace(/\D/g, "");
+  return b.length >= 8 && a.slice(-9) === b.slice(-9);
+}
+
+const ACTIVE_STATES = ["PENDIENTE", "CONFIRMADA"];
 
 export async function GET(
   request: NextRequest,
@@ -30,21 +41,23 @@ export async function GET(
       );
     }
 
-    // Si se pasa teléfono, verificar que coincida
-    if (phone) {
-      const normPhone = normalizePhone(phone);
-      if (
-        !appointment.customer.celular.includes(normPhone.replace("+51", "")) &&
-        !appointment.customer.celular.includes(normPhone)
-      ) {
-        return NextResponse.json(
-          { error: "El celular no coincide con el registro de la cita." },
-          { status: 403 }
-        );
-      }
+    // El celular es obligatorio y debe coincidir para ver los datos de la cita.
+    if (!phone) {
+      return NextResponse.json(
+        { error: "Ingresa el celular con el que hiciste la reserva para ver tu cita." },
+        { status: 401 }
+      );
+    }
+    if (!phoneMatches(appointment.customer.celular, phone)) {
+      return NextResponse.json(
+        { error: "El código y el celular no coinciden." },
+        { status: 403 }
+      );
     }
 
-    return NextResponse.json({ appointment });
+    const loyalty = await getLoyaltyForCustomer(appointment.customerId);
+
+    return NextResponse.json({ appointment, loyalty });
   } catch (error: any) {
     console.error("Error retrieving booking:", error);
     return NextResponse.json(
@@ -61,7 +74,7 @@ export async function PATCH(
   try {
     const { code } = params;
     const body = await request.json();
-    const { action, motivo, newStartAt } = body;
+    const { action, motivo, newStartAt, phone } = body;
 
     const appointment = await prisma.appointment.findUnique({
       where: { codigo: code.toUpperCase() },
@@ -72,6 +85,22 @@ export async function PATCH(
       return NextResponse.json(
         { error: "Cita no encontrada." },
         { status: 404 }
+      );
+    }
+
+    // Verificar propiedad: el celular debe coincidir con el de la reserva.
+    if (!phoneMatches(appointment.customer.celular, phone)) {
+      return NextResponse.json(
+        { error: "Para cancelar o reprogramar, confirma el celular con el que reservaste." },
+        { status: 403 }
+      );
+    }
+
+    // Solo se puede actuar sobre citas activas (no completadas/canceladas/no-asistió).
+    if (!ACTIVE_STATES.includes(appointment.estado)) {
+      return NextResponse.json(
+        { error: "Esta cita ya no está activa y no puede modificarse." },
+        { status: 409 }
       );
     }
 

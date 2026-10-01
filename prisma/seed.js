@@ -1,6 +1,23 @@
 const { PrismaClient } = require("@prisma/client");
+const crypto = require("crypto");
+try {
+  require("dotenv").config();
+} catch (_) {
+  /* dotenv opcional */
+}
 
 const prisma = new PrismaClient();
+
+// Hash de contraseña con scrypt (mismo formato que lib/infrastructure/security/password.ts)
+function hashPassword(plain) {
+  const N = 16384;
+  const salt = crypto.randomBytes(16);
+  const derived = crypto.scryptSync(plain.normalize("NFKC"), salt, 64, { N });
+  return `scrypt$${N}$${salt.toString("hex")}$${derived.toString("hex")}`;
+}
+
+const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "admin@nailsexpress.com").toLowerCase().trim();
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123Nails!";
 
 async function main() {
   console.log("Seeding Nails Express database...");
@@ -24,7 +41,7 @@ async function main() {
       intervaloSlotsMinutos: 30,
       horasLimiteCancelacion: 12,
       heroKicker: "MANOS QUE HABLAN DE TI",
-      heroTitulo: "Uñas increíbles, cuando tú quieras",
+      heroTitulo: "Uñas increíbles,",
       heroSubtitulo:
         "Manicure, pedicure y diseños personalizados. Rápido, fácil y cerca de ti.",
       heroBoton: "Reservar ahora →",
@@ -41,14 +58,14 @@ async function main() {
     },
   });
 
-  // 2. Admin User
+  // 2. Admin User (contraseña hasheada con scrypt)
   await prisma.user.upsert({
-    where: { email: "admin@nailsexpress.com" },
+    where: { email: ADMIN_EMAIL },
     update: {},
     create: {
       nombre: "Administrador Nails Express",
-      email: "admin@nailsexpress.com",
-      passwordHash: "admin123Nails!", // En producción usar bcrypt
+      email: ADMIN_EMAIL,
+      passwordHash: hashPassword(ADMIN_PASSWORD),
       rol: "OWNER",
       activo: true,
     },
@@ -473,6 +490,17 @@ async function main() {
       update: faq,
       create: faq,
     });
+  }
+
+  // 8b. Testimonios de muestra
+  const testimonialsData = [
+    { id: "test-1", nombre: "Camila R.", texto: "Mis uñas quedaron hermosas y duraron muchísimo. El trato es súper cálido, ya soy clienta fija.", estrellas: 5, servicio: "Manicure en gel", orden: 1 },
+    { id: "test-2", nombre: "Valeria M.", texto: "El diseño que me hicieron superó lo que esperaba. Ambiente lindo y muy prolijas. ¡Las recomiendo!", estrellas: 5, servicio: "Nail art", orden: 2 },
+    { id: "test-3", nombre: "Daniela S.", texto: "Reservé online en un minuto y me atendieron puntual. El pedicure spa es una experiencia increíble.", estrellas: 5, servicio: "Pedicure spa", orden: 3 },
+    { id: "test-4", nombre: "Lucía P.", texto: "Siempre salgo feliz. Son detallistas y te hacen sentir consentida. Además junto sellos para mi premio.", estrellas: 5, servicio: "Manicure clásico", orden: 4 },
+  ];
+  for (const t of testimonialsData) {
+    await prisma.testimonial.upsert({ where: { id: t.id }, update: t, create: t });
   }
 
   // 9. Gallery Items (Reference image 07)

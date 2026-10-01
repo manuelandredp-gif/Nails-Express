@@ -1,11 +1,27 @@
 import { addMinutes } from "date-fns";
 import crypto from "crypto";
 import { prisma } from "../db";
+import { notifications } from "./notifications.service";
 import {
   PrismaAppointmentRepository,
   PrismaCustomerRepository,
   PrismaServiceRepository,
 } from "../infrastructure/database/prisma-repositories";
+
+/** true si el error proviene de la restricción de exclusión (solapamiento) de PostgreSQL. */
+function isOverlapViolation(err: any): boolean {
+  const msg = String(err?.message || "");
+  return (
+    err?.code === "23P01" ||
+    err?.meta?.code === "23P01" ||
+    msg.includes("no_overlap_per_staff") ||
+    msg.includes("exclusion") ||
+    msg.includes("23P01")
+  );
+}
+
+const OVERLAP_MESSAGE =
+  "Lo sentimos, ese horario acaba de ser reservado por otra persona. Por favor elige otro horario.";
 
 export interface CreateBookingDTO {
   serviceId: string;
@@ -29,12 +45,12 @@ export function normalizePhone(phone: string): string {
 }
 
 export function generateSecureBookingCode(): string {
-  // 6 uppercase alphanumeric characters with high entropy (36^6 = 2.17 billion combinations)
-  const bytes = crypto.randomBytes(4);
+  // NX- + 6 caracteres del alfabeto sin ambiguos (32^6 ≈ 1.07 mil millones)
   const chars = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+  const bytes = crypto.randomBytes(6);
   let result = "NX-";
-  for (let i = 0; i < 5; i++) {
-    result += chars[bytes[i % bytes.length] % chars.length];
+  for (let i = 0; i < 6; i++) {
+    result += chars[bytes[i] % chars.length];
   }
   return result;
 }
@@ -81,8 +97,91 @@ export class BookingService {
       throw new Error("No hay manicuristas disponibles para este servicio.");
     }
 
-    // 3. Concurrency check inside Prisma Transaction
-    return await prisma.$transaction(async (tx) => {
+    // 3. Transacción con reintentos: cubre colisión de código y conflictos de
+    //    serialización/solapamiento (la restricción de exclusión de PostgreSQL
+    //    garantiza a nivel de base que dos citas nunca se solapen por manicurista).
+    let lastErr: any;
+    for (let attempt = 0; attempt < 4; attempt++) {
+      try {
+        const appointment = await this.runBookingTransaction({
+          eligibleStaff,
+          service,
+          slotStart,
+          slotEnd,
+          nombre,
+          celular,
+          email,
+          notasCliente,
+          notasInternas,
+          origen,
+          estado,
+        });
+
+        // 9. Notificar confirmación al cliente (no bloquea la reserva si falla).
+        notifications
+          .sendBookingConfirmation({
+            toEmail: appointment.customer.email,
+            toPhone: appointment.customer.celular,
+            customerName: appointment.customer.nombre,
+            serviceName: appointment.service.nombre,
+            startAt: appointment.startAt,
+            bookingCode: appointment.codigo,
+            price: appointment.precio,
+          })
+          .catch((e) => console.error("No se pudo enviar la confirmación:", e));
+
+        return appointment;
+      } catch (err: any) {
+        lastErr = err;
+        if (isOverlapViolation(err)) {
+          throw new Error(OVERLAP_MESSAGE);
+        }
+        // Colisión de código único o conflicto de serialización: reintentar.
+        const msg = String(err?.message || "");
+        if (
+          err?.code === "P2002" ||
+          msg.includes("40001") ||
+          msg.includes("could not serialize") ||
+          msg.includes("write conflict") ||
+          msg.includes("deadlock")
+        ) {
+          continue;
+        }
+        throw err;
+      }
+    }
+    throw lastErr || new Error("No se pudo crear la reserva.");
+  }
+
+  private async runBookingTransaction(ctx: {
+    eligibleStaff: any[];
+    service: any;
+    slotStart: Date;
+    slotEnd: Date;
+    nombre: string;
+    celular: string;
+    email?: string;
+    notasCliente?: string;
+    notasInternas?: string;
+    origen: string;
+    estado: string;
+  }) {
+    const {
+      eligibleStaff,
+      service,
+      slotStart,
+      slotEnd,
+      nombre,
+      celular,
+      email,
+      notasCliente,
+      notasInternas,
+      origen,
+      estado,
+    } = ctx;
+
+    return await prisma.$transaction(
+      async (tx) => {
       const eligibleStaffIds = eligibleStaff.map((s: any) => s.id);
 
       // Check conflicting appointments
@@ -213,7 +312,9 @@ export class BookingService {
       });
 
       return appointment;
-    });
+      },
+      { isolationLevel: "Serializable" }
+    );
   }
 }
 

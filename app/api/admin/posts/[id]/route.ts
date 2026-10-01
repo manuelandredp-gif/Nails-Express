@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAdminSession } from "@/lib/auth";
+import { revalidatePublicSite } from "@/lib/revalidate";
 
 export const dynamic = "force-dynamic";
 
@@ -43,6 +44,7 @@ export async function PATCH(
       data: dataToUpdate,
     });
 
+    revalidatePublicSite();
     return NextResponse.json({ success: true, post: updated });
   } catch (err: any) {
     return NextResponse.json(
@@ -63,6 +65,7 @@ export async function DELETE(
     }
 
     await prisma.post.delete({ where: { id: params.id } });
+    revalidatePublicSite();
     return NextResponse.json({ success: true });
   } catch (err: any) {
     return NextResponse.json(

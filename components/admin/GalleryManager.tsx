@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { Plus, Trash2, Eye, EyeOff, X, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
+import ImageField from "@/components/admin/ImageField";
 
 interface GalleryItemType {
   id: string;
@@ -171,21 +172,12 @@ export default function GalleryManager({
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  URL de la imagen *
-                </label>
-                <input
-                  type="url"
-                  required
-                  value={form.imagen}
-                  onChange={(e) =>
-                    setForm({ ...form, imagen: e.target.value })
-                  }
-                  placeholder="https://..."
-                  className="w-full px-3 py-2 text-xs border rounded-lg outline-none focus:border-primary"
-                />
-              </div>
+              <ImageField
+                label="Imagen"
+                required
+                value={form.imagen}
+                onChange={(url) => setForm({ ...form, imagen: url })}
+              />
 
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1">

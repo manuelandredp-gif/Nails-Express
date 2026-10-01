@@ -5,6 +5,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Calendar, User, Clock, Share2 } from "lucide-react";
 import type { Metadata } from "next";
+import { sanitizePostHtml } from "@/lib/sanitize";
 
 export async function generateMetadata({
   params,
@@ -16,8 +17,8 @@ export async function generateMetadata({
   });
   if (!post) return { title: "Artículo no encontrado" };
   return {
-    title: `${post.titulo} | Blog Nails Express`,
-    description: post.extracto,
+    title: post.metaTitle || post.titulo,
+    description: post.metaDescription || post.extracto,
     openGraph: {
       title: post.titulo,
       description: post.extracto,
@@ -40,6 +41,8 @@ export default async function BlogPostPage({
   if (!post || post.estado !== "PUBLICADO") {
     notFound();
   }
+
+  const settings = await prisma.settings.findUnique({ where: { id: "default" } });
 
   // Related posts
   const relatedPosts = await prisma.post.findMany({
@@ -116,23 +119,23 @@ export default async function BlogPostPage({
         {/* Content Body */}
         <div
           className="prose prose-lg max-w-none text-[#1A1A1A] leading-relaxed space-y-4 font-normal"
-          dangerouslySetInnerHTML={{ __html: post.contenidoHtml }}
+          dangerouslySetInnerHTML={{ __html: sanitizePostHtml(post.contenidoHtml) }}
         />
 
         {/* CTA to Book */}
         <div className="my-14 bg-[#FBEDED] border border-[#F5D8D8] rounded-[18px] p-8 text-center space-y-4">
           <h3 className="text-2xl font-bold text-[#1A1A1A]">
-            ¿Te gustaría lucir un diseño como este?
+            {settings?.blogCtaTitulo}
           </h3>
           <p className="text-sm text-[#6B6B6B] max-w-md mx-auto">
-            Nuestras manicuristas expertas en Tacna harán realidad tu idea con la mayor precisión y cuidado.
+            {settings?.blogCtaTexto}
           </p>
           <div className="pt-2">
             <Link
               href="/reservar"
               className="btn-primary py-3 px-8 text-sm font-semibold shadow-sm inline-flex"
             >
-              Reservar cita ahora
+              {settings?.blogCtaBoton || "Reservar cita"}
             </Link>
           </div>
         </div>

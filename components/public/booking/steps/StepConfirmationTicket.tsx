@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -21,13 +21,44 @@ import { toast } from "sonner";
 interface StepConfirmationTicketProps {
   booking: any;
   currency: string;
+  nombreNegocio?: string;
+  direccion?: string;
+  whatsapp?: string;
 }
 
 export default function StepConfirmationTicket({
   booking,
   currency,
+  nombreNegocio = "Nails Express",
+  direccion = "",
+  whatsapp = "",
 }: StepConfirmationTicketProps) {
+  const whatsappDigits = whatsapp.replace(/\D/g, "");
   const [copied, setCopied] = useState(false);
+
+  // Lluvia de confeti rosa al confirmar la reserva
+  useEffect(() => {
+    if (!booking) return;
+    const reduce =
+      typeof window !== "undefined" &&
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) return;
+    let cancelled = false;
+    import("canvas-confetti")
+      .then((mod) => {
+        if (cancelled) return;
+        const confetti = mod.default;
+        const colors = ["#E86B86", "#F3A6BC", "#C79A4E", "#5CC6BF", "#FBE1E7"];
+        confetti({ particleCount: 90, spread: 75, origin: { y: 0.35 }, colors });
+        setTimeout(() => confetti({ particleCount: 50, angle: 60, spread: 60, origin: { x: 0, y: 0.5 }, colors }), 200);
+        setTimeout(() => confetti({ particleCount: 50, angle: 120, spread: 60, origin: { x: 1, y: 0.5 }, colors }), 350);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [booking]);
 
   if (!booking) return null;
 
@@ -70,7 +101,7 @@ export default function StepConfirmationTicket({
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
             <span className="text-xs font-bold uppercase tracking-wider text-primary">
-              Nails Express Boutique
+              {nombreNegocio}
             </span>
           </div>
           <span className="text-[10px] font-mono bg-white/10 px-2 py-0.5 rounded-full text-gray-300">
@@ -163,8 +194,8 @@ export default function StepConfirmationTicket({
                 <MapPin className="w-3.5 h-3.5 text-primary" />
                 <span>Ubicación:</span>
               </span>
-              <span className="font-bold text-[#1A1A1A]">
-                Calle San Martín 620, Tacna
+              <span className="font-bold text-[#1A1A1A] text-right">
+                {direccion}
               </span>
             </div>
 
@@ -188,8 +219,8 @@ export default function StepConfirmationTicket({
           </Link>
 
           <a
-            href={`https://wa.me/51952123456?text=${encodeURIComponent(
-              `Hola Nails Express, tengo la reserva ${bookingCode} para el ${format(
+            href={`https://wa.me/${whatsappDigits}?text=${encodeURIComponent(
+              `Hola ${nombreNegocio}, tengo la reserva ${bookingCode} para el ${format(
                 new Date(booking.startAt),
                 "dd/MM HH:mm"
               )} y deseo hacer una consulta.`

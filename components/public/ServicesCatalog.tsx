@@ -9,21 +9,24 @@ interface ServicesCatalogProps {
   })[];
   currency?: string;
   defaultCategory?: string;
+  categorias?: { nombre: string; slug: string }[];
+  titulo?: string;
+  subtitulo?: string;
 }
 
 export default function ServicesCatalog({
   initialServices,
   currency = "S/",
   defaultCategory = "todos",
+  categorias = [],
+  titulo = "Nuestros servicios",
+  subtitulo = "Belleza y cuidado en cada detalle.",
 }: ServicesCatalogProps) {
   const [selectedCategory, setSelectedCategory] = useState(defaultCategory);
 
   const categories = [
     { label: "Todos", slug: "todos" },
-    { label: "Manicure", slug: "manicure" },
-    { label: "Pedicure", slug: "pedicure" },
-    { label: "Diseños", slug: "disenos" },
-    { label: "Extras", slug: "extras" },
+    ...categorias.map((c) => ({ label: c.nombre, slug: c.slug })),
   ];
 
   const filteredServices =
@@ -43,10 +46,10 @@ export default function ServicesCatalog({
         {/* Header (Matching image 02) */}
         <div className="text-center max-w-2xl mx-auto mb-10">
           <h1 className="text-3xl sm:text-4xl font-bold text-[#1A1A1A] tracking-tight">
-            Nuestros servicios
+            {titulo}
           </h1>
           <p className="mt-3 text-base text-[#6B6B6B]">
-            Belleza y cuidado en cada detalle.
+            {subtitulo}
           </p>
         </div>
 

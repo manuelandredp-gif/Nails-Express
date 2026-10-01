@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAdminSession } from "@/lib/auth";
+import { revalidatePublicSite } from "@/lib/revalidate";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +39,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    revalidatePublicSite();
     return NextResponse.json({ success: true, item }, { status: 201 });
   } catch (err: any) {
     return NextResponse.json(

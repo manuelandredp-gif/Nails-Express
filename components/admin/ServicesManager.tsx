@@ -16,6 +16,7 @@ import {
   Users,
 } from "lucide-react";
 import { toast } from "sonner";
+import ImageField from "@/components/admin/ImageField";
 
 interface ServiceItem {
   id: string;
@@ -401,20 +402,12 @@ export default function ServicesManager({
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  URL de Imagen Principal
-                </label>
-                <input
-                  type="url"
-                  required
-                  value={form.imagenPrincipal}
-                  onChange={(e) =>
-                    setForm({ ...form, imagenPrincipal: e.target.value })
-                  }
-                  className="w-full px-3 py-2 text-xs border rounded-lg outline-none focus:border-primary"
-                />
-              </div>
+              <ImageField
+                label="Imagen principal"
+                required
+                value={form.imagenPrincipal}
+                onChange={(url) => setForm({ ...form, imagenPrincipal: url })}
+              />
 
               {/* Staff checkboxes */}
               <div>

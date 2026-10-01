@@ -14,16 +14,24 @@ export interface GalleryPhoto {
 interface GalleryGridProps {
   items: GalleryPhoto[];
   showTitle?: boolean;
+  titulo?: string;
+  subtitulo?: string;
 }
 
 export default function GalleryGrid({
   items,
   showTitle = true,
+  titulo = "Galería de inspiración",
+  subtitulo = "Ideas reales, para uñas reales.",
 }: GalleryGridProps) {
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [activePhotoIndex, setActivePhotoIndex] = useState<number | null>(null);
 
-  const categories = ["Todos", "Manicure", "Pedicure", "Diseños", "Temporada"];
+  // Categorías derivadas de las fotos cargadas en el admin
+  const categories = [
+    "Todos",
+    ...Array.from(new Set(items.map((i) => i.categoria).filter(Boolean))),
+  ];
 
   const filteredItems =
     selectedCategory === "Todos"
@@ -58,15 +66,15 @@ export default function GalleryGrid({
   };
 
   return (
-    <section className="py-16 sm:py-20 bg-white">
+    <section className="py-16 sm:py-20 sec-mint">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {showTitle && (
           <div className="text-center max-w-2xl mx-auto mb-10">
             <h2 className="text-3xl sm:text-4xl font-bold text-[#1A1A1A] tracking-tight">
-              Galería de inspiración
+              {titulo}
             </h2>
             <p className="mt-3 text-base text-[#6B6B6B]">
-              Ideas reales, para uñas reales.
+              {subtitulo}
             </p>
           </div>
         )}

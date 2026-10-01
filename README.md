@@ -121,11 +121,25 @@ Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
 
 ## 📦 Despliegue en Producción (Vercel + Supabase)
 
+La base de datos es **PostgreSQL (Supabase)**. Las migraciones de Prisma incluyen la
+restricción de exclusión que impide dobles reservas a nivel de motor.
+
 1. En **Supabase**:
-   - Crea un nuevo proyecto.
-   - En el SQL Editor, corre el script `prisma/migrations/postgresql_exclusion_constraint.sql`.
-   - Copia la cadena de conexión `DATABASE_URL` a tus variables de entorno en Vercel.
-2. En **Vercel**:
-   - Conecta el repositorio de GitHub.
-   - Configura las variables de entorno (`DATABASE_URL`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, etc.).
-   - Deploy automático con un solo clic.
+   - Crea un proyecto y copia las dos cadenas de conexión (Project Settings → Database):
+     `DATABASE_URL` (pooler, puerto 6543) y `DIRECT_URL` (directa, puerto 5432).
+   - Crea un bucket público de Storage llamado `uploads` (Storage → New bucket).
+2. **Localmente**, copia `.env.example` a `.env` y completa:
+   - `DATABASE_URL`, `DIRECT_URL`
+   - `AUTH_SECRET` (genera con `openssl rand -base64 48`)
+   - `CRON_SECRET` (genera con `openssl rand -hex 24`)
+   - `ADMIN_EMAIL`, `ADMIN_PASSWORD` (solo para el seed inicial)
+   - `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (para las fotos)
+3. Aplica migraciones y datos iniciales:
+   ```bash
+   npx prisma migrate deploy   # crea tablas + restricción anti doble-reserva
+   npm run prisma:seed         # crea el admin (contraseña hasheada) y datos demo
+   ```
+4. En **Vercel**:
+   - Conecta el repositorio y define TODAS las variables de entorno anteriores.
+   - El `build` corre `prisma migrate deploy` automáticamente; la tarea de recordatorios
+     queda programada por `vercel.json` y protegida con `CRON_SECRET`.

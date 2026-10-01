@@ -17,8 +17,8 @@ export async function generateMetadata({
   });
   if (!service) return { title: "Servicio no encontrado" };
   return {
-    title: `${service.nombre} | Nails Express`,
-    description: service.descripcionCorta,
+    title: service.metaTitle || service.nombre,
+    description: service.metaDescription || service.descripcionCorta,
   };
 }
 
@@ -121,9 +121,11 @@ export default async function ServiceDetailPage({
                 ))}
               </div>
               <span className="text-xs sm:text-sm font-semibold text-[#1A1A1A]">
-                4.9
+                {settings?.servicioRating || "4.9"}
               </span>
-              <span className="text-xs text-[#8E8E8E]">(120 reseñas)</span>
+              <span className="text-xs text-[#8E8E8E]">
+                {settings?.servicioRatingTexto || ""}
+              </span>
             </div>
 
             {/* Description */}

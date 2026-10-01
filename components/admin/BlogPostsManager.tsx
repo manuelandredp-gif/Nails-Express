@@ -18,6 +18,7 @@ import {
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "sonner";
+import ImageField from "@/components/admin/ImageField";
 
 interface BlogPostItem {
   id: string;
@@ -306,20 +307,12 @@ export default function BlogPostsManager({
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  URL de Imagen de Portada
-                </label>
-                <input
-                  type="url"
-                  required
-                  value={form.imagenPortada}
-                  onChange={(e) =>
-                    setForm({ ...form, imagenPortada: e.target.value })
-                  }
-                  className="w-full px-3 py-2 text-xs border rounded-lg outline-none focus:border-primary"
-                />
-              </div>
+              <ImageField
+                label="Imagen de portada"
+                required
+                value={form.imagenPortada}
+                onChange={(url) => setForm({ ...form, imagenPortada: url })}
+              />
 
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1">

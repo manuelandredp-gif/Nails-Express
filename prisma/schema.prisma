@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -87,10 +88,29 @@ model Customer {
   notasInternas  String?
   totalCitas     Int           @default(0)
   inasistencias  Int           @default(0)
+  sellos         Int           @default(0) // sellos en la tarjeta en curso
+  sellosTotal    Int           @default(0) // sellos ganados en total (histórico)
   ultimaVisita   DateTime?
   citas          Appointment[]
+  rewards        Reward[]
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
+}
+
+model Reward {
+  id          String    @id @default(uuid())
+  codigo      String    @unique
+  customerId  String
+  customer    Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  premio      String    // descripción del premio al momento de ganarlo
+  estado      String    @default("DISPONIBLE") // DISPONIBLE | CANJEADO | EXPIRADO
+  ganadoEn    DateTime  @default(now())
+  canjeadoEn  DateTime?
+  expiraEn    DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([customerId])
+  @@index([estado])
 }
 
 model Appointment {
@@ -111,6 +131,7 @@ model Appointment {
   notasInternas     String?
   canceladoPor      String?
   motivoCancelacion String?
+  selloOtorgado     Boolean          @default(false) // evita contar el sello dos veces
   logs              AppointmentLog[]
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
@@ -188,6 +209,18 @@ model Faq {
   createdAt DateTime @default(now())
 }
 
+model Testimonial {
+  id        String   @id @default(uuid())
+  nombre    String
+  texto     String
+  avatar    String?
+  estrellas Int      @default(5)
+  servicio  String?  // ej. "Manicure en gel"
+  orden     Int      @default(0)
+  visible   Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
 model Settings {
   id                       String   @id @default("default")
   nombreNegocio            String   @default("Nails Express")
@@ -204,7 +237,7 @@ model Settings {
   intervaloSlotsMinutos    Int      @default(30)
   horasLimiteCancelacion   Int      @default(12)
   heroKicker               String   @default("MANOS QUE HABLAN DE TI")
-  heroTitulo               String   @default("Uñas increíbles, cuando tú quieras")
+  heroTitulo               String   @default("Uñas increíbles,")
   heroSubtitulo            String   @default("Manicure, pedicure y diseños personalizados. Rápido, fácil y cerca de ti.")
   heroBoton                String   @default("Reservar ahora →")
   nosotrosTitulo           String   @default("Más que uñas, es bienestar")
@@ -216,5 +249,98 @@ model Settings {
   instagramUrl             String   @default("https://instagram.com/nailsexpress")
   tiktokUrl                String   @default("https://tiktok.com/@nailsexpress")
   facebookUrl              String   @default("https://facebook.com/nailsexpress")
+  // --- Contenido editable de la web ---
+  logoTextoPrincipal       String   @default("NAILS")
+  logoTextoSecundario      String   @default("EXPRESS")
+  menuLinks                String   @default("Inicio|/\nServicios|/servicios\nGalería|/galeria\nNosotros|/nosotros\nBlog|/blog\nContacto|/contacto")
+  headerBoton              String   @default("Reservar cita")
+  heroTituloItalico        String   @default("cuando tú quieras")
+  heroImagen               String   @default("/images/hero-hands.jpg")
+  heroImagenAlt            String   @default("Uñas increíbles Nails Express")
+  heroCaligrafia           String   @default("Good Nails\nGood Mood ♡")
+  heroBadge1Titulo         String   @default("Calidad")
+  heroBadge1Texto          String   @default("en cada servicio")
+  heroBadge2Titulo         String   @default("En el horario")
+  heroBadge2Texto          String   @default("que prefieras")
+  heroBadge3Titulo         String   @default("Resultados")
+  heroBadge3Texto          String   @default("que amarás")
+  serviciosTitulo          String   @default("Nuestros servicios")
+  serviciosSubtitulo       String   @default("Belleza y cuidado en cada detalle.")
+  serviciosBotonTodos      String   @default("Ver todos")
+  reservaRapidaTitulo      String   @default("Reserva tu cita")
+  reservaRapidaSubtitulo   String   @default("Es rápido y sencillo")
+  reservaRapidaBoton       String   @default("Continuar")
+  nosotrosImagen           String   @default("/images/salon-interior.jpg")
+  nosotrosImagenAlt        String   @default("Instalaciones de Nails Express")
+  metricasClientesLabel    String   @default("Clientes felices")
+  metricasCalificacionLabel String  @default("Calificación promedio")
+  metricasAnosLabel        String   @default("Cuidando de ti")
+  galeriaTitulo            String   @default("Galería de inspiración")
+  galeriaSubtitulo         String   @default("Ideas reales, para uñas reales.")
+  blogTitulo               String   @default("Consejos y tendencias")
+  blogSubtitulo            String   @default("Todo sobre el mundo de las uñas, en un solo lugar.")
+  faqTitulo                String   @default("Preguntas frecuentes")
+  faqSubtitulo             String   @default("Resolvemos tus dudas.")
+  contactoTitulo           String   @default("Contáctanos")
+  contactoSubtitulo        String   @default("¿Tienes dudas o quieres más información? ¡Escríbenos!")
+  contactoImagen           String   @default("/images/neon-sign.jpg")
+  contactoImagenAlt        String   @default("Letrero neón Nails Express")
+  contactoBotonWhatsapp    String   @default("Escríbenos a WhatsApp")
+  mapaEmbedUrl             String   @default("https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15197.669614742874!2d-70.25413346473133!3d-18.01386762391697!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x915acf5dfeb6e60b%3A0xe5567b57b545f47!2sTacna%2C%20Per%C3%BA!5e0!3m2!1ses!2spe!4v1700000000000!5m2!1ses!2spe")
+  mostrarMapa              Boolean  @default(true)
+  whatsappMensaje          String   @default("¡Hola Nails Express! Me gustaría consultar sobre sus servicios y citas.")
+  whatsappBotonTexto       String   @default("WhatsApp")
+  footerDescripcion        String   @default("Belleza, bienestar y confianza en un solo lugar.")
+  footerCopyright          String   @default("Todos los derechos reservados.")
+  footerFrase              String   @default("Hecho con ♡ para uñas increíbles.")
+  footerLinks              String   @default("Inicio|/\nServicios|/servicios\nGalería|/galeria\nNosotros|/nosotros\nContacto|/contacto\nConsultar cita|/mis-citas")
+  seoTitulo                String   @default("Nails Express | Salón y Estudio de Uñas en Tacna")
+  seoDescripcion           String   @default("Estudio de uñas profesional en Tacna, Perú. Manicure clásico, manicure en gel, pedicure spa y diseños personalizados. Reserva tu cita en línea con disponibilidad en tiempo real.")
+  seoKeywords              String   @default("uñas tacna, manicure tacna, pedicure tacna, uñas en gel tacna, nails express")
+  ciudad                   String   @default("Tacna")
+  pais                     String   @default("PE")
+  codigoPostal             String   @default("23001")
+  latitud                  String   @default("-18.013867")
+  longitud                 String   @default("-70.254133")
+  rangoPrecios             String   @default("S/ 15 - S/ 90")
+  metodosPago              String   @default("Efectivo, Tarjeta, Yape, Plin")
+  blogCtaTitulo            String   @default("¿Te gustaría lucir un diseño como este?")
+  blogCtaTexto             String   @default("Nuestras manicuristas expertas harán realidad tu idea con la mayor precisión y cuidado.")
+  blogCtaBoton             String   @default("Reservar cita ahora")
+  servicioRating           String   @default("4.9")
+  servicioRatingTexto      String   @default("(120 reseñas)")
+  // --- Textos editables del panel de inicio (Dashboard) ---
+  dashBadgeCitasHoy        String   @default("+14% vs ayer")
+  dashSubCitasHoy          String   @default("100% libre de cruces")
+  dashBadgeSemana          String   @default("+8% semanal")
+  dashBadgeIngresos        String   @default("Proyección activa")
+  dashBadgeInasistencia    String   @default("Bajo control")
+  // --- Programa de fidelidad (tarjeta de sellos) ---
+  sellosActivo             Boolean  @default(true)
+  sellosMeta               Int      @default(8)
+  sellosPremio             String   @default("50% de descuento en tu próximo servicio")
+  sellosTitulo             String   @default("Tu tarjeta de sellos")
+  sellosSubtitulo          String   @default("Junta un sello con cada visita y gana un premio")
+  sellosExpiraDias         Int      @default(180) // 0 = los premios no expiran
+  // --- Franja de beneficios (bajo el hero) ---
+  beneficiosActivo         Boolean  @default(true)
+  beneficios               String   @default("Reserva online|Agenda tu cita 24/7 en segundos\nProductos premium|Marcas de primera calidad\nManicuristas expertas|Equipo profesional y cálido\nPuntualidad|Respetamos tu tiempo")
+  // --- Testimonios ---
+  testimoniosActivo        Boolean  @default(true)
+  testimoniosTitulo        String   @default("Lo que dicen nuestras clientas")
+  testimoniosSubtitulo     String   @default("Miles de manos felices y uñas increíbles")
+  // --- Colores de temporada (muestrario) ---
+  coloresActivo            Boolean  @default(true)
+  coloresTitulo            String   @default("Colores de temporada")
+  coloresSubtitulo         String   @default("Los tonos que están marcando tendencia")
+  coloresLista             String   @default("Rosa Blush|#F3A6BC\nCoral Dulce|#E8707A\nNude Elegante|#E8C5A8\nLila Suave|#C9A6E6\nMenta Fresca|#9FE0D9\nRojo Pasión|#C8455F\nDurazno|#FBCDA8\nPerla|#F0E6E8")
+  // --- Antes y después ---
+  antesDespuesActivo       Boolean  @default(false)
+  antesDespuesTitulo       String   @default("La transformación")
+  antesImagen              String   @default("/images/salon-interior.jpg")
+  despuesImagen            String   @default("/images/hero-hands.jpg")
+  // --- Franja de Instagram ---
+  instagramActivo          Boolean  @default(true)
+  instagramUsuario         String   @default("@nailsexpress")
   updatedAt                DateTime @updatedAt
 }

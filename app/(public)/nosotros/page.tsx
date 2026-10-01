@@ -1,31 +1,21 @@
 import React from "react";
-import { prisma } from "@/lib/db";
+import { getSiteSettings } from "@/lib/site-content";
 import AboutSection from "@/components/public/AboutSection";
 import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "Sobre Nosotros",
-  description:
-    "Más que uñas, es bienestar. Conoce la historia, el equipo y la filosofía de cuidado de Nails Express Tacna.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const s = await getSiteSettings();
+  return { title: s.nosotrosTitulo, description: s.nosotrosTexto.slice(0, 160) };
+}
 
 export const revalidate = 60;
 
 export default async function NosotrosPage() {
-  const settings = await prisma.settings.findUnique({
-    where: { id: "default" },
-  });
+  const settings = await getSiteSettings();
 
   return (
     <div className="py-6 sm:py-10 bg-white">
-      <AboutSection
-        titulo={settings?.nosotrosTitulo}
-        texto={settings?.nosotrosTexto}
-        botonTexto={settings?.nosotrosBoton}
-        metricasClientes={settings?.metricasClientes}
-        metricasCalificacion={settings?.metricasCalificacion}
-        metricasAnos={settings?.metricasAnos}
-      />
+      <AboutSection settings={settings} />
     </div>
   );
 }

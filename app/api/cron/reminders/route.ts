@@ -7,6 +7,13 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {
+    // Autorización: requiere el secreto del cron (Vercel Cron envía este header).
+    const secret = process.env.CRON_SECRET;
+    const auth = request.headers.get("authorization");
+    if (!secret || auth !== `Bearer ${secret}`) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
     const now = new Date();
     // Target window 24h ahead (+/- 30 min)
     const in24h = addHours(now, 24);

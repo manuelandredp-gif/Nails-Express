@@ -1,5 +1,6 @@
 import React from "react";
 import { prisma } from "@/lib/db";
+import { getSiteSettings } from "@/lib/site-content";
 import { notFound } from "next/navigation";
 import {
   Calendar as CalendarIcon,
@@ -37,6 +38,9 @@ export default async function ConfirmacionPage({
     notFound();
   }
 
+  const settings = await getSiteSettings();
+  const waDigits = (settings.whatsapp || "").replace(/\D/g, "");
+
   const start = new Date(appointment.startAt)
     .toISOString()
     .replace(/-|:|\.\d\d\d/g, "");
@@ -44,13 +48,13 @@ export default async function ConfirmacionPage({
     .toISOString()
     .replace(/-|:|\.\d\d\d/g, "");
   const gcalTitle = encodeURIComponent(
-    `Cita Nails Express: ${appointment.service.nombre}`
+    `Cita ${settings.nombreNegocio}: ${appointment.service.nombre}`
   );
   const gcalDetails = encodeURIComponent(
     `Código de reserva: ${appointment.codigo}\nManicurista: ${appointment.staff.nombre}`
   );
   const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${gcalTitle}&dates=${start}/${end}&details=${gcalDetails}&location=${encodeURIComponent(
-    "Av. San Martín 456, Tacna, Perú"
+    settings.direccion
   )}`;
 
   return (
@@ -99,7 +103,7 @@ export default async function ConfirmacionPage({
               {appointment.service.nombre}
             </p>
             <p className="text-xs text-[#E8707A] font-semibold">
-              S/ {appointment.precio.toFixed(0)}
+              {settings.moneda} {appointment.precio.toFixed(0)}
             </p>
           </div>
         </div>
@@ -110,8 +114,8 @@ export default async function ConfirmacionPage({
             <MapPin className="w-5 h-5 text-[#1A1A1A]" strokeWidth={1.5} />
           </div>
           <div>
-            <p className="text-sm font-bold text-[#1A1A1A]">Nails Express</p>
-            <p className="text-xs text-[#6B6B6B]">Av. San Martín 456, Tacna</p>
+            <p className="text-sm font-bold text-[#1A1A1A]">{settings.nombreNegocio}</p>
+            <p className="text-xs text-[#6B6B6B]">{settings.direccion}</p>
           </div>
         </div>
       </div>
@@ -138,8 +142,8 @@ export default async function ConfirmacionPage({
 
       <div className="pt-2">
         <a
-          href={`https://wa.me/51952123456?text=${encodeURIComponent(
-            `¡Hola Nails Express! Cita confirmada para ${appointment.service.nombre} (Código: ${appointment.codigo}).`
+          href={`https://wa.me/${waDigits}?text=${encodeURIComponent(
+            `¡Hola ${settings.nombreNegocio}! Cita confirmada para ${appointment.service.nombre} (Código: ${appointment.codigo}).`
           )}`}
           target="_blank"
           rel="noreferrer"

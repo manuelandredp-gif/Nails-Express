@@ -17,7 +17,15 @@ export default async function AdminProtectedLayout({
   }
 
   return (
-    <div className="min-h-screen bg-[#FDFBFB] flex">
+    <div
+      className="min-h-screen flex"
+      style={{
+        backgroundColor: "#FDF7F8",
+        backgroundImage:
+          "radial-gradient(40rem 30rem at 100% -5%, rgba(243,166,188,0.16), transparent 60%), radial-gradient(38rem 30rem at -5% 8%, rgba(92,198,191,0.10), transparent 55%)",
+        backgroundAttachment: "fixed",
+      }}
+    >
       {/* Sidebar */}
       <AdminSidebar user={session} />
 

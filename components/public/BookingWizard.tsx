@@ -16,6 +16,9 @@ interface BookingWizardProps {
   staffList?: StaffItem[];
   currency?: string;
   preselectedSlug?: string;
+  nombreNegocio?: string;
+  direccion?: string;
+  whatsapp?: string;
 }
 
 export default function BookingWizard({
@@ -23,6 +26,9 @@ export default function BookingWizard({
   staffList = [],
   currency = "S/",
   preselectedSlug,
+  nombreNegocio,
+  direccion,
+  whatsapp,
 }: BookingWizardProps) {
   const searchParams = useSearchParams();
   const initialServiceSlug = preselectedSlug || searchParams.get("service");
@@ -219,6 +225,9 @@ export default function BookingWizard({
         <StepConfirmationTicket
           booking={state.confirmedBooking}
           currency={currency}
+          nombreNegocio={nombreNegocio}
+          direccion={direccion}
+          whatsapp={whatsapp}
         />
       )}
 

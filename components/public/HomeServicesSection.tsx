@@ -19,11 +19,23 @@ interface ServiceItem {
 interface HomeServicesSectionProps {
   services: ServiceItem[];
   currency?: string;
+  titulo?: string;
+  subtitulo?: string;
+  botonTodos?: string;
+  reservaTitulo?: string;
+  reservaSubtitulo?: string;
+  reservaBoton?: string;
 }
 
 export default function HomeServicesSection({
   services,
   currency = "S/",
+  titulo = "Nuestros servicios",
+  subtitulo = "Belleza y cuidado en cada detalle.",
+  botonTodos = "Ver todos",
+  reservaTitulo = "Reserva tu cita",
+  reservaSubtitulo = "Es rápido y sencillo",
+  reservaBoton = "Continuar",
 }: HomeServicesSectionProps) {
   const router = useRouter();
 
@@ -40,16 +52,16 @@ export default function HomeServicesSection({
   const displayServices = services.slice(0, 5);
 
   return (
-    <section className="py-12 sm:py-16 bg-white relative">
+    <section className="py-12 sm:py-16 relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="flex items-end justify-between mb-8 pb-2">
           <div>
             <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#1A1A1A] tracking-tight">
-              Nuestros servicios
+              {titulo}
             </h2>
             <p className="mt-1 text-xs sm:text-sm text-[#6B6B6B]">
-              Belleza y cuidado en cada detalle.
+              {subtitulo}
             </p>
           </div>
 
@@ -57,7 +69,7 @@ export default function HomeServicesSection({
             href="/servicios"
             className="border border-gray-200 hover:border-gray-300 text-xs sm:text-sm font-medium text-gray-700 hover:text-gray-900 px-4 py-1.5 rounded-full inline-flex items-center gap-1.5 transition-colors shadow-2xs"
           >
-            <span>Ver todos</span>
+            <span>{botonTodos}</span>
             <span>→</span>
           </Link>
         </div>
@@ -70,7 +82,7 @@ export default function HomeServicesSection({
               <Link
                 key={srv.id}
                 href={`/servicios/${srv.slug}`}
-                className="group bg-white rounded-[18px] border border-gray-100 p-2.5 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between"
+                className="group card-lift bg-white rounded-[18px] border border-gray-100 p-2.5 shadow-2xs flex flex-col justify-between"
               >
                 <div>
                   <div className="relative aspect-[4/3] rounded-[14px] overflow-hidden bg-gray-100 mb-2.5">
@@ -106,10 +118,10 @@ export default function HomeServicesSection({
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="font-serif text-xl font-bold text-[#1A1A1A]">
-                    Reserva tu cita
+                    {reservaTitulo}
                   </h3>
                   <p className="text-xs text-[#8E8E8E] mt-0.5">
-                    Es rápido y sencillo
+                    {reservaSubtitulo}
                   </p>
                 </div>
                 <div className="w-6 h-6 text-primary">
@@ -163,7 +175,7 @@ export default function HomeServicesSection({
                   onClick={handleContinueBooking}
                   className="w-full bg-primary hover:bg-primary-hover text-white text-xs sm:text-sm font-semibold py-3 px-4 rounded-xl inline-flex items-center justify-center gap-2 shadow-xs transition-all hover:scale-101"
                 >
-                  <span>Continuar</span>
+                  <span>{reservaBoton}</span>
                   <span>→</span>
                 </button>
               </div>

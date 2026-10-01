@@ -27,6 +27,9 @@ interface CustomerWithDetails {
   notasInternas: string | null;
   totalCitas: number;
   inasistencias: number;
+  sellos?: number;
+  sellosTotal?: number;
+  nivel?: string;
   ultimaVisita: string | null;
   citas: {
     id: string;
@@ -214,6 +217,19 @@ export default function CustomersManager({
                         <span>{selectedCustomer.email}</span>
                       </>
                     )}
+                  </div>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="inline-flex items-center gap-1 text-[0.7rem] font-bold text-[#C8455F] bg-[#FBE1E7] px-2 py-0.5 rounded-full">
+                      💅 {selectedCustomer.sellos ?? 0} sellos
+                    </span>
+                    {selectedCustomer.nivel && selectedCustomer.nivel !== "Nueva" && (
+                      <span className="inline-flex items-center gap-1 text-[0.7rem] font-bold text-[#B98F3E] bg-[#F8EFD9] px-2 py-0.5 rounded-full">
+                        ★ {selectedCustomer.nivel}
+                      </span>
+                    )}
+                    <span className="text-[0.7rem] text-gray-400">
+                      {selectedCustomer.sellosTotal ?? 0} ganados en total
+                    </span>
                   </div>
                 </div>
               </div>

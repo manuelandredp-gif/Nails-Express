@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAdminSession } from "@/lib/auth";
 import { addMinutes } from "date-fns";
+import { awardStampForAppointment } from "@/lib/application/loyalty.service";
 
 export const dynamic = "force-dynamic";
 
@@ -188,7 +189,17 @@ export async function PATCH(
       });
     }
 
-    return NextResponse.json({ success: true, appointment: updated });
+    // Sello de fidelidad: al marcar la cita como COMPLETADA se otorga un sello.
+    let loyalty = null;
+    if (estado === "COMPLETADA" && appointment.estado !== "COMPLETADA") {
+      try {
+        loyalty = await awardStampForAppointment(appointment.id);
+      } catch (e) {
+        console.error("No se pudo otorgar el sello de fidelidad:", e);
+      }
+    }
+
+    return NextResponse.json({ success: true, appointment: updated, loyalty });
   } catch (err: any) {
     console.error("Error updating appointment:", err);
     return NextResponse.json(

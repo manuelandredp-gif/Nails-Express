@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { Clock, Plus, Users, Save, CheckCircle, XCircle, X } from "lucide-react";
 import { toast } from "sonner";
+import ImageField from "@/components/admin/ImageField";
 
 interface BusinessHourItem {
   id: string;
@@ -329,20 +330,12 @@ export default function ScheduleTeamManager({
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  URL de Foto de Perfil
-                </label>
-                <input
-                  type="url"
-                  required
-                  value={newStaffForm.foto}
-                  onChange={(e) =>
-                    setNewStaffForm({ ...newStaffForm, foto: e.target.value })
-                  }
-                  className="w-full px-3 py-2 text-xs border rounded-lg outline-none focus:border-primary"
-                />
-              </div>
+              <ImageField
+                label="Foto de perfil"
+                required
+                value={newStaffForm.foto}
+                onChange={(url) => setNewStaffForm({ ...newStaffForm, foto: url })}
+              />
 
               <div className="flex justify-end gap-2 pt-3 border-t">
                 <button

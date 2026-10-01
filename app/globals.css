@@ -11,6 +11,12 @@
   --blush: #F9E3E3;
   --blush-light: #FBEDED;
   --accent-rose: #E8707A;
+  --rose-deep: #E86B86;
+  --peach: #FBE3D2;
+  --lila: #B98BD9;
+  --lila-light: #F1E7FA;
+  --gold: #C79A4E;
+  --gold-light: #F8EFD9;
   --text-dark: #1A1A1A;
   --text-muted: #6B6B6B;
   --border-light: #ECECEC;
@@ -25,7 +31,13 @@
 body {
   font-family: var(--font-sans);
   color: var(--text-dark);
-  background-color: #FFFFFF;
+  /* Fondo cálido con leves auras de color rosa/durazno/teal */
+  background-color: #FEF9FA;
+  background-image:
+    radial-gradient(60rem 40rem at 85% -10%, rgba(243, 166, 188, 0.18), transparent 60%),
+    radial-gradient(50rem 40rem at -10% 15%, rgba(92, 198, 191, 0.10), transparent 55%),
+    radial-gradient(55rem 45rem at 50% 120%, rgba(251, 227, 210, 0.22), transparent 60%);
+  background-attachment: fixed;
   margin: 0;
   padding: 0;
   -webkit-font-smoothing: antialiased;
@@ -67,6 +79,7 @@ body {
 
 /* Buttons */
 .btn-primary {
+  background-image: linear-gradient(120deg, #5CC6BF 0%, #46B8B0 55%, #4db5ae 100%);
   background-color: #5CC6BF;
   color: #FFFFFF;
   font-weight: 600;
@@ -76,13 +89,50 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  transition: all 0.2s ease;
+  transition: all 0.22s ease;
   border: 1px solid transparent;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(92, 198, 191, 0.28);
+}
+/* Brillo que cruza el botón al pasar el mouse */
+.btn-primary::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -80%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,0.45), transparent);
+  transform: skewX(-18deg);
+  transition: left 0.55s ease;
 }
 .btn-primary:hover {
-  background-color: #4db5ae;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(92, 198, 191, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(92, 198, 191, 0.38);
+}
+.btn-primary:hover::after {
+  left: 130%;
+}
+
+/* Variante de botón rosa (call to action cálido) */
+.btn-rose {
+  background-image: linear-gradient(120deg, #F3A6BC 0%, #E86B86 60%, #E8707A 100%);
+  color: #FFFFFF;
+  font-weight: 600;
+  padding: 0.625rem 1.35rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.22s ease;
+  border: 1px solid transparent;
+  box-shadow: 0 2px 10px rgba(232, 107, 134, 0.3);
+}
+.btn-rose:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(232, 107, 134, 0.42);
 }
 
 .btn-blush {
@@ -164,4 +214,109 @@ body {
   background-color: #FFFFFF;
   color: #6B6B6B;
   border: 1.5px solid #D1D5DB;
+}
+
+/* ============================================================
+   Más color y vida — utilidades globales
+   ============================================================ */
+
+/* Título con degradé rosa → coral → lila */
+.text-gradient {
+  background-image: linear-gradient(100deg, #E86B86 0%, #C8455F 45%, #B98BD9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.text-gradient-teal {
+  background-image: linear-gradient(100deg, #2AA79C 0%, #5CC6BF 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Secciones con fondo alternado (dejan ver el aura del body) */
+.sec-blush {
+  background-image: linear-gradient(180deg, rgba(251, 225, 231, 0.55), rgba(255, 253, 253, 0.65));
+}
+.sec-peach {
+  background-image: linear-gradient(180deg, rgba(251, 227, 210, 0.45), rgba(255, 253, 251, 0.7));
+}
+.sec-mint {
+  background-image: linear-gradient(180deg, rgba(225, 244, 241, 0.6), rgba(255, 253, 253, 0.7));
+}
+
+/* Línea/divisor dorado sutil */
+.rule-gold {
+  height: 2px;
+  width: 56px;
+  border: 0;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #E8B96B, #C79A4E);
+}
+
+/* Manchas orgánicas de color de fondo */
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 0;
+}
+.blob-rose { background: #F3A6BC; }
+.blob-teal { background: #9FE0D9; }
+.blob-peach { background: #FBCDA8; }
+.blob-lila { background: #D9BCF0; }
+
+/* Aparición suave al hacer scroll (activada por IntersectionObserver) */
+.reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+.reveal.in {
+  opacity: 1;
+  transform: none;
+}
+
+/* Elevación con color al pasar el mouse */
+.card-lift {
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.card-lift:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 16px 34px rgba(200, 90, 120, 0.14);
+  border-color: rgba(232, 112, 122, 0.4);
+}
+
+/* Pulso para el botón flotante de WhatsApp */
+.wa-pulse::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: currentColor;
+  opacity: 0.55;
+  z-index: -1;
+  animation: wa-ping 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@keyframes wa-ping {
+  0% { transform: scale(1); opacity: 0.5; }
+  70%, 100% { transform: scale(1.7); opacity: 0; }
+}
+
+/* Conteo/entrada de números */
+@keyframes pop-in {
+  0% { transform: scale(0.8); opacity: 0; }
+  60% { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Respetar reduce-motion */
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+  .wa-pulse::before { animation: none; }
+  .btn-primary::after { transition: none; }
+  * { scroll-behavior: auto !important; }
 }

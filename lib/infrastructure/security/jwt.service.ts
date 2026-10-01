@@ -1,6 +1,19 @@
 import crypto from "crypto";
 
-const JWT_SECRET = process.env.AUTH_SECRET || "nails-express-secure-fortune500-secret-2026-tacna-peru";
+const rawSecret = process.env.AUTH_SECRET;
+
+if (process.env.NODE_ENV === "production" && (!rawSecret || rawSecret.length < 32)) {
+  // Falla el arranque en producción si el secreto no está bien provisto.
+  throw new Error(
+    "AUTH_SECRET no está definido o es demasiado corto. Define una cadena aleatoria de 32+ caracteres en las variables de entorno."
+  );
+}
+
+// En desarrollo se permite un secreto efímero para no bloquear el arranque local.
+const JWT_SECRET =
+  rawSecret && rawSecret.length >= 32
+    ? rawSecret
+    : "dev-only-insecure-secret-change-me-0000000000";
 
 export interface SessionPayload {
   userId: string;

@@ -31,3 +31,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Entorno y base de datos local (nunca versionar secretos)
+.env
+prisma/dev.db
+public/uploads/*
+!public/uploads/.gitignore
+
+# Base de datos local de desarrollo (Postgres embebido)
+.pgdata
+.pgdata-dev

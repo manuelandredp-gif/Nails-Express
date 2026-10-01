@@ -3,9 +3,26 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, Calendar, Search } from "lucide-react";
+import { Menu, X, Calendar } from "lucide-react";
+import type { SiteLink } from "@/lib/site-content";
 
-export default function Header() {
+interface HeaderProps {
+  logo?: string | null;
+  logoTextoPrincipal: string;
+  logoTextoSecundario: string;
+  nombreNegocio: string;
+  navLinks: SiteLink[];
+  botonTexto: string;
+}
+
+export default function Header({
+  logo,
+  logoTextoPrincipal,
+  logoTextoSecundario,
+  nombreNegocio,
+  navLinks,
+  botonTexto,
+}: HeaderProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
@@ -18,14 +35,8 @@ export default function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const navLinks = [
-    { name: "Inicio", href: "/" },
-    { name: "Servicios", href: "/servicios" },
-    { name: "Galería", href: "/galeria" },
-    { name: "Nosotros", href: "/nosotros" },
-    { name: "Blog", href: "/blog" },
-    { name: "Contacto", href: "/contacto" },
-  ];
+  const isActive = (href: string) =>
+    href === "/" ? pathname === "/" : pathname.startsWith(href);
 
   return (
     <header
@@ -36,66 +47,55 @@ export default function Header() {
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-        {/* Brand Logo (Matching Image 01) */}
+        {/* Brand Logo */}
         <Link href="/" className="flex flex-col items-start select-none group">
-          <span className="text-xl sm:text-2xl font-black tracking-[0.22em] text-[#1A1A1A] uppercase font-sans">
-            NAILS
-          </span>
-          <span className="text-[0.58rem] font-bold tracking-[0.34em] text-[#8E8E8E] -mt-1 uppercase">
-            EXPRESS
-          </span>
+          {logo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logo} alt={nombreNegocio} className="h-10 w-auto object-contain" />
+          ) : (
+            <>
+              <span className="text-xl sm:text-2xl font-black tracking-[0.22em] text-[#1A1A1A] uppercase font-sans">
+                {logoTextoPrincipal}
+              </span>
+              <span className="text-[0.58rem] font-bold tracking-[0.34em] text-[#8E8E8E] -mt-1 uppercase">
+                {logoTextoSecundario}
+              </span>
+            </>
+          )}
         </Link>
 
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center space-x-7">
-          {navLinks.map((link) => {
-            const isActive =
-              link.href === "/"
-                ? pathname === "/"
-                : pathname.startsWith(link.href);
-            return (
-              <Link
-                key={link.name}
-                href={link.href}
-                className={`text-sm transition-all pb-1 ${
-                  isActive
-                    ? "text-[#1A1A1A] font-bold border-b-2 border-[#1A1A1A]"
-                    : "text-[#5A5A5A] hover:text-[#1A1A1A] font-medium"
-                }`}
-              >
-                {link.name}
-              </Link>
-            );
-          })}
+          {navLinks.map((link) => (
+            <Link
+              key={link.href + link.name}
+              href={link.href}
+              className={`text-sm transition-all pb-1 ${
+                isActive(link.href)
+                  ? "text-[#1A1A1A] font-bold border-b-2 border-[#1A1A1A]"
+                  : "text-[#5A5A5A] hover:text-[#1A1A1A] font-medium"
+              }`}
+            >
+              {link.name}
+            </Link>
+          ))}
         </nav>
 
-        {/* Right Actions: Search + Reservar cita */}
+        {/* Right Actions */}
         <div className="hidden md:flex items-center space-x-5">
-          <button
-            type="button"
-            className="p-2 text-gray-500 hover:text-gray-900 transition-colors"
-            title="Buscar"
-            aria-label="Buscar"
-          >
-            <Search className="w-4 h-4" />
-          </button>
-
           <Link
             href="/reservar"
             className="bg-primary hover:bg-primary-hover text-white text-xs sm:text-sm font-semibold py-2.5 px-4 rounded-xl inline-flex items-center gap-2 shadow-xs transition-all hover:scale-102"
           >
             <Calendar className="w-4 h-4" />
-            <span>Reservar cita</span>
+            <span>{botonTexto}</span>
           </Link>
         </div>
 
         {/* Mobile menu button */}
         <div className="flex items-center space-x-2 md:hidden">
-          <Link
-            href="/reservar"
-            className="btn-primary text-xs py-2 px-3.5"
-          >
-            Reservar
+          <Link href="/reservar" className="btn-primary text-xs py-2 px-3.5">
+            {botonTexto}
           </Link>
           <button
             onClick={() => setIsOpen(!isOpen)}
@@ -110,24 +110,18 @@ export default function Header() {
       {/* Mobile menu */}
       {isOpen && (
         <div className="md:hidden bg-white border-b border-gray-100 px-4 pt-2 pb-6 space-y-3">
-          {navLinks.map((link) => {
-            const isActive =
-              link.href === "/"
-                ? pathname === "/"
-                : pathname.startsWith(link.href);
-            return (
-              <Link
-                key={link.name}
-                href={link.href}
-                onClick={() => setIsOpen(false)}
-                className={`block py-2 text-sm ${
-                  isActive ? "text-primary font-bold" : "text-[#5A5A5A]"
-                }`}
-              >
-                {link.name}
-              </Link>
-            );
-          })}
+          {navLinks.map((link) => (
+            <Link
+              key={link.href + link.name}
+              href={link.href}
+              onClick={() => setIsOpen(false)}
+              className={`block py-2 text-sm ${
+                isActive(link.href) ? "text-primary font-bold" : "text-[#5A5A5A]"
+              }`}
+            >
+              {link.name}
+            </Link>
+          ))}
           <div className="pt-2 border-t border-gray-100 flex flex-col gap-2">
             <Link
               href="/mis-citas"

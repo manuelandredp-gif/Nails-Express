@@ -15,20 +15,26 @@ export interface BlogPostItem {
 
 interface BlogSectionProps {
   posts: BlogPostItem[];
+  titulo?: string;
+  subtitulo?: string;
 }
 
-export default function BlogSection({ posts }: BlogSectionProps) {
+export default function BlogSection({
+  posts,
+  titulo = "Consejos y tendencias",
+  subtitulo = "Todo sobre el mundo de las uñas, en un solo lugar.",
+}: BlogSectionProps) {
   return (
-    <section className="py-16 sm:py-20 bg-white">
+    <section className="py-16 sm:py-20 sec-peach">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header with Title and "Ver todos" button */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-12 gap-4">
           <div>
             <h2 className="text-3xl sm:text-4xl font-bold text-[#1A1A1A] tracking-tight">
-              Consejos y tendencias
+              {titulo}
             </h2>
             <p className="mt-2 text-base text-[#6B6B6B]">
-              Todo sobre el mundo de las uñas, en un solo lugar.
+              {subtitulo}
             </p>
           </div>
           <div>
@@ -61,7 +67,7 @@ export default function BlogSection({ posts }: BlogSectionProps) {
             return (
               <article
                 key={post.id}
-                className="bg-white rounded-[16px] border border-[#ECECEC] p-4 flex flex-col justify-between hover:shadow-hover transition-all duration-300 group"
+                className="card-lift bg-white rounded-[16px] border border-[#ECECEC] p-4 flex flex-col justify-between group"
               >
                 <div>
                   <Link

@@ -12,11 +12,15 @@ export interface FaqItem {
 interface FaqAccordionProps {
   faqs: FaqItem[];
   showTitle?: boolean;
+  titulo?: string;
+  subtitulo?: string;
 }
 
 export default function FaqAccordion({
   faqs,
   showTitle = true,
+  titulo = "Preguntas frecuentes",
+  subtitulo = "Resolvemos tus dudas.",
 }: FaqAccordionProps) {
   // First item open by default as in reference image 11
   const [openId, setOpenId] = useState<string | null>(
@@ -28,15 +32,15 @@ export default function FaqAccordion({
   };
 
   return (
-    <section className="py-16 sm:py-20 bg-white">
+    <section className="py-16 sm:py-20">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {showTitle && (
           <div className="text-center max-w-2xl mx-auto mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold text-[#1A1A1A] tracking-tight">
-              Preguntas frecuentes
+              {titulo}
             </h2>
             <p className="mt-3 text-base text-[#6B6B6B]">
-              Resolvemos tus dudas.
+              {subtitulo}
             </p>
           </div>
         )}

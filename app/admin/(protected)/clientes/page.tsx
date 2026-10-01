@@ -23,6 +23,9 @@ export default async function ClientesPage() {
     notasInternas: c.notasInternas,
     totalCitas: c.totalCitas,
     inasistencias: c.inasistencias,
+    sellos: c.sellos,
+    sellosTotal: c.sellosTotal,
+    nivel: c.sellosTotal >= 20 ? "Oro" : c.sellosTotal >= 10 ? "Plata" : c.sellosTotal >= 4 ? "Bronce" : "Nueva",
     ultimaVisita: c.ultimaVisita?.toISOString() || null,
     citas: c.citas.map((cita) => ({
       id: cita.id,
