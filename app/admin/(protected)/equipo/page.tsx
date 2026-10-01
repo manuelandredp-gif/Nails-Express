@@ -18,20 +18,38 @@ export default async function EquipoPage() {
         rol: true,
         activo: true,
         staffId: true,
-        createdAt: true,
       },
     }),
     prisma.staff.findMany({
       where: { activo: true },
-      select: { id: true, nombre: true },
+      select: { id: true, nombre: true, foto: true, color: true },
       orderBy: { orden: "asc" },
     }),
   ]);
 
-  const formatted = users.map((u) => ({
-    ...u,
-    createdAt: u.createdAt.toISOString(),
-  }));
+  // Cada manicurista (Staff) puede tener —o no— una cuenta de acceso (User).
+  const managers = users
+    .filter((u) => u.rol === "OWNER" || u.rol === "ADMIN")
+    .map((u) => ({ id: u.id, nombre: u.nombre, email: u.email, rol: u.rol }));
 
-  return <TeamAccessManager initialUsers={formatted} staff={staff} />;
+  const manicuristas = staff.map((s) => {
+    const cuenta = users.find(
+      (u) => u.staffId === s.id && (u.rol === "MANICURISTA" || u.rol === "RECEPCION")
+    );
+    return {
+      staffId: s.id,
+      nombre: s.nombre,
+      foto: s.foto,
+      color: s.color,
+      cuenta: cuenta
+        ? {
+            userId: cuenta.id,
+            email: cuenta.email,
+            activo: cuenta.activo,
+          }
+        : null,
+    };
+  });
+
+  return <TeamAccessManager manicuristas={manicuristas} managers={managers} />;
 }
