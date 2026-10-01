@@ -114,6 +114,11 @@ export default function StepClientDetails({
           </div>
         </div>
       </div>
+
+      <p className="text-[0.65rem] text-gray-400 leading-relaxed px-1">
+        🔒 Usamos tus datos solo para gestionar tu cita y recordártela por WhatsApp.
+        No los compartimos con terceros. Puedes pedir su eliminación cuando quieras.
+      </p>
     </div>
   );
 }

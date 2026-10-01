@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { revalidatePublicSite } from "@/lib/revalidate";
 import { withManager, HttpError } from "@/lib/http/api";
+import { sanitizePostHtml } from "@/lib/sanitize";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +42,7 @@ export const POST = withManager(async (req, _ctx, session) => {
       titulo,
       slug: autoSlug,
       extracto,
-      contenidoHtml,
+      contenidoHtml: sanitizePostHtml(contenidoHtml),
       imagenPortada:
         imagenPortada ||
         "https://images.unsplash.com/photo-1632345031435-8727f6897d53?w=800",

@@ -56,10 +56,16 @@ export async function GET(request: NextRequest) {
       sentCount++;
     }
 
+    // Mantenimiento: borra contadores de límite de tasa ya vencidos.
+    const limpiados = await prisma.rateLimit.deleteMany({
+      where: { resetAt: { lt: new Date() } },
+    });
+
     return NextResponse.json({
       success: true,
       message: `Recordatorios procesados: ${sentCount}`,
       sentCount,
+      rateLimitLimpiados: limpiados.count,
     });
   } catch (err: any) {
     logError("cron_reminders_error", err);

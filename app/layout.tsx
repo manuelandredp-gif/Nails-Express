@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "sonner";
+import { Analytics } from "@vercel/analytics/next";
 import { getSiteSettings } from "@/lib/site-content";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -43,6 +44,7 @@ export default function RootLayout({
       <body className="min-h-screen flex flex-col bg-white text-[#1A1A1A] antialiased">
         {children}
         <Toaster position="top-right" richColors closeButton />
+        <Analytics />
       </body>
     </html>
   );

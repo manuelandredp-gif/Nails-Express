@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { prisma } from "@/lib/db";
 import type { Settings } from "@prisma/client";
 
@@ -6,8 +7,11 @@ export type SiteSettings = Settings;
 /**
  * Devuelve la configuración del sitio. Si no existe el registro "default",
  * lo crea con los valores por defecto del schema.
+ *
+ * Envuelto en `cache()`: durante UNA misma petición (layout + página +
+ * componentes), la consulta a la BD se hace una sola vez y se reutiliza.
  */
-export async function getSiteSettings(): Promise<SiteSettings> {
+export const getSiteSettings = cache(async (): Promise<SiteSettings> => {
   const existing = await prisma.settings.findUnique({ where: { id: "default" } });
   if (existing) return existing;
   // upsert evita una carrera si dos peticiones lo crean a la vez en el primer arranque.
@@ -16,7 +20,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     update: {},
     create: { id: "default" },
   });
-}
+});
 
 export interface SiteLink {
   name: string;

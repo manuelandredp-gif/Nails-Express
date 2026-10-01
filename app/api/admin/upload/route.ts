@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import path from "path";
+import sharp from "sharp";
 import { saveUpload } from "@/lib/infrastructure/storage";
 import { withManager, HttpError } from "@/lib/http/api";
 
@@ -22,19 +22,33 @@ export const POST = withManager(async (req) => {
     throw new HttpError(400, "La imagen supera 8 MB.");
   }
 
-  const ext = (path.extname(file.name) || "." + file.type.split("/")[1]).toLowerCase();
   const base =
-    path
-      .basename(file.name, path.extname(file.name))
+    file.name
+      .replace(/\.[^.]+$/, "")
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "")
       .slice(0, 40) || "imagen";
-  const name = `${Date.now()}-${base}${ext}`;
 
-  const buffer = Buffer.from(await file.arrayBuffer());
+  const original = Buffer.from(await file.arrayBuffer());
+
+  // Procesa con sharp: valida que sea una imagen real (si no, lanza), auto-orienta
+  // y ELIMINA metadatos EXIF (incluida ubicación GPS), redimensiona si es enorme y
+  // convierte a WebP (mucho más liviano). Cubre validación de contenido + privacidad.
+  let webp: Buffer;
   try {
-    const url = await saveUpload(buffer, name, file.type);
+    webp = await sharp(original)
+      .rotate()
+      .resize(1600, 1600, { fit: "inside", withoutEnlargement: true })
+      .webp({ quality: 80 })
+      .toBuffer();
+  } catch {
+    throw new HttpError(400, "El archivo no es una imagen válida.");
+  }
+
+  const name = `${Date.now()}-${base}.webp`;
+  try {
+    const url = await saveUpload(webp, name, "image/webp");
     return NextResponse.json({ url });
   } catch (err: any) {
     // El error de almacenamiento es informativo para la administración (no sensible).

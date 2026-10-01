@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { revalidatePublicSite } from "@/lib/revalidate";
 import { withManager } from "@/lib/http/api";
+import { sanitizePostHtml } from "@/lib/sanitize";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +14,7 @@ export const PATCH = withManager(async (req, { params }) => {
   if (titulo !== undefined) data.titulo = titulo;
   if (slug !== undefined) data.slug = slug;
   if (extracto !== undefined) data.extracto = extracto;
-  if (contenidoHtml !== undefined) data.contenidoHtml = contenidoHtml;
+  if (contenidoHtml !== undefined) data.contenidoHtml = sanitizePostHtml(contenidoHtml);
   if (imagenPortada !== undefined) data.imagenPortada = imagenPortada;
   if (categoria !== undefined) data.categoria = categoria;
   if (estado !== undefined) data.estado = estado;
