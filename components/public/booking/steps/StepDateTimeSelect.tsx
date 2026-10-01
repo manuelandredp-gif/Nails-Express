@@ -14,7 +14,7 @@ interface StepDateTimeSelectProps {
   shiftFilter: "all" | "morning" | "afternoon";
   onSelectShift: (s: "all" | "morning" | "afternoon") => void;
   loadingSlots: boolean;
-  slots: { time: string; available: boolean; staffName?: string }[];
+  slots: { time: string; available: boolean; staffName?: string; startAt?: string }[];
   selectedSlot: string | null;
   onSelectSlot: (slotIso: string) => void;
 }
@@ -181,8 +181,10 @@ export default function StepDateTimeSelect({
         ) : (
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2.5">
             {filteredSlots.map((slot, idx) => {
-              const slotIso = `${selectedDate}T${slot.time}:00`;
-              const isSelected = selectedSlot?.startsWith(`${selectedDate}T${slot.time}`);
+              // Usar el instante real que calcula la API (ya anclado a America/Lima).
+              // Fallback al formato antiguo solo si no viniera startAt.
+              const slotIso = slot.startAt || `${selectedDate}T${slot.time}:00`;
+              const isSelected = selectedSlot === slotIso;
               return (
                 <button
                   key={idx}

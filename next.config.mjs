@@ -1,5 +1,10 @@
 /** @type {import('next').NextConfig} */
 
+// Fuerza la zona horaria del salón (Vercel corre en UTC y no permite la env var TZ).
+if (!process.env.TZ) {
+  process.env.TZ = "America/Lima";
+}
+
 // Host de Supabase Storage (si está configurado) para permitir sus imágenes.
 let supabaseHost = null;
 try {
@@ -20,6 +25,9 @@ if (supabaseHost) {
 
 const nextConfig = {
   reactStrictMode: true,
+  experimental: {
+    instrumentationHook: true,
+  },
   images: {
     remotePatterns,
   },

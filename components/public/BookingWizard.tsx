@@ -47,7 +47,7 @@ export default function BookingWizard({
     shiftFilter: "all",
   });
 
-  const [slots, setSlots] = useState<{ time: string; available: boolean }[]>([]);
+  const [slots, setSlots] = useState<{ time: string; available: boolean; startAt?: string }[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
