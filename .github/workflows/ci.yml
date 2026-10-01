@@ -32,7 +32,7 @@ jobs:
       AUTH_SECRET: ci-only-secret-at-least-32-characters-long-0000
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v4
         with:
