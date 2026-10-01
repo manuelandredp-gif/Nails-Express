@@ -24,10 +24,10 @@ export async function PATCH(
       );
     }
 
-    // Solo se pueden gestionar trabajadoras desde aquí (no otras dueñas/admins).
-    if (isManager(target.rol)) {
+    // La cuenta de la dueña (OWNER) y la propia cuenta no se tocan desde aquí.
+    if (target.rol === "OWNER" || target.id === session.userId) {
       return NextResponse.json(
-        { error: "No se puede modificar una cuenta de administración desde aquí." },
+        { error: "Esta cuenta no se puede modificar desde aquí." },
         { status: 403 }
       );
     }
@@ -39,6 +39,13 @@ export async function PATCH(
     if (body.activo !== undefined) data.activo = Boolean(body.activo);
     if (body.staffId !== undefined)
       data.staffId = body.staffId ? String(body.staffId) : null;
+    if (body.rol !== undefined) {
+      const ROLES_PERMITIDOS = ["MANICURISTA", "RECEPCION", "ADMIN"];
+      if (!ROLES_PERMITIDOS.includes(String(body.rol))) {
+        return NextResponse.json({ error: "Rol no válido." }, { status: 400 });
+      }
+      data.rol = String(body.rol);
+    }
     if (body.password) {
       if (String(body.password).length < 6) {
         return NextResponse.json(
@@ -90,9 +97,9 @@ export async function DELETE(
         { status: 404 }
       );
     }
-    if (isManager(target.rol)) {
+    if (target.rol === "OWNER" || target.id === session.userId) {
       return NextResponse.json(
-        { error: "No se puede eliminar una cuenta de administración." },
+        { error: "Esta cuenta no se puede eliminar desde aquí." },
         { status: 403 }
       );
     }

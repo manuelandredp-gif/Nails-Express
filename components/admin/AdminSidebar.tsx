@@ -138,7 +138,24 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
                 <Link
                   key={item.name}
                   href={item.href}
-                  onClick={() => setMobileOpen(false)}
+                  onClick={() => {
+                    setMobileOpen(false);
+                    // Truco oculto: 10 clics seguidos en «Configuración»
+                    // desbloquean la zona de mantenimiento (borrar datos de prueba).
+                    try {
+                      if (item.href === "/admin/configuracion") {
+                        const n =
+                          (parseInt(sessionStorage.getItem("nx_cfg_clicks") || "0", 10) || 0) + 1;
+                        sessionStorage.setItem("nx_cfg_clicks", String(n));
+                        if (n >= 10) {
+                          sessionStorage.setItem("nx_maintenance", "1");
+                          window.dispatchEvent(new Event("nx-show-maintenance"));
+                        }
+                      } else {
+                        sessionStorage.setItem("nx_cfg_clicks", "0");
+                      }
+                    } catch {}
+                  }}
                   className={`flex items-center gap-3 px-3.5 py-2.5 rounded-[10px] text-sm font-medium transition-colors ${
                     isActive
                       ? "bg-[#E6F6F4] text-primary font-semibold shadow-2xs"

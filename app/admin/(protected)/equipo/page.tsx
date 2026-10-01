@@ -6,7 +6,7 @@ import TeamAccessManager from "@/components/admin/TeamAccessManager";
 export const dynamic = "force-dynamic";
 
 export default async function EquipoPage() {
-  await requireManager();
+  const session = await requireManager();
 
   const [users, staff] = await Promise.all([
     prisma.user.findMany({
@@ -21,35 +21,57 @@ export default async function EquipoPage() {
       },
     }),
     prisma.staff.findMany({
-      where: { activo: true },
-      select: { id: true, nombre: true, foto: true, color: true },
       orderBy: { orden: "asc" },
+      select: {
+        id: true,
+        nombre: true,
+        foto: true,
+        color: true,
+        activo: true,
+        dni: true,
+        telefono: true,
+        email: true,
+        direccion: true,
+      },
     }),
   ]);
 
-  // Cada manicurista (Staff) puede tener —o no— una cuenta de acceso (User).
-  const managers = users
-    .filter((u) => u.rol === "OWNER" || u.rol === "ADMIN")
-    .map((u) => ({ id: u.id, nombre: u.nombre, email: u.email, rol: u.rol }));
-
-  const manicuristas = staff.map((s) => {
-    const cuenta = users.find(
-      (u) => u.staffId === s.id && (u.rol === "MANICURISTA" || u.rol === "RECEPCION")
-    );
+  // Cada empleada (Staff) con su cuenta de acceso, si la tiene.
+  const empleadas = staff.map((s) => {
+    const cuenta = users.find((u) => u.staffId === s.id);
     return {
       staffId: s.id,
       nombre: s.nombre,
       foto: s.foto,
       color: s.color,
+      activo: s.activo,
+      dni: s.dni,
+      telefono: s.telefono,
+      email: s.email,
+      direccion: s.direccion,
       cuenta: cuenta
         ? {
             userId: cuenta.id,
             email: cuenta.email,
+            rol: cuenta.rol,
             activo: cuenta.activo,
           }
         : null,
     };
   });
 
-  return <TeamAccessManager manicuristas={manicuristas} managers={managers} />;
+  // Cuentas de administración sin vincular a una empleada (la dueña, etc.)
+  const managers = users
+    .filter(
+      (u) => (u.rol === "OWNER" || u.rol === "ADMIN") && !u.staffId
+    )
+    .map((u) => ({ id: u.id, nombre: u.nombre, email: u.email, rol: u.rol }));
+
+  return (
+    <TeamAccessManager
+      empleadas={empleadas}
+      managers={managers}
+      miUserId={session.userId}
+    />
+  );
 }

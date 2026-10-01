@@ -29,17 +29,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
-    const { nombre, foto, color, bio } = await request.json();
+    const { nombre, foto, color, bio, dni, telefono, email, direccion } =
+      await request.json();
+
+    if (!nombre || !String(nombre).trim()) {
+      return NextResponse.json(
+        { error: "El nombre es obligatorio." },
+        { status: 400 }
+      );
+    }
+
     const count = await prisma.staff.count();
 
     const staff = await prisma.staff.create({
       data: {
-        nombre,
+        nombre: String(nombre).trim(),
         foto:
           foto ||
           "https://images.unsplash.com/photo-1595152772835-219674b2a8a6?w=400",
         color: color || "#5CC6BF",
         bio: bio || "Manicurista profesional",
+        dni: dni ? String(dni).trim() : null,
+        telefono: telefono ? String(telefono).trim() : null,
+        email: email ? String(email).trim().toLowerCase() : null,
+        direccion: direccion ? String(direccion).trim() : null,
         activo: true,
         orden: count + 1,
       },

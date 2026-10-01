@@ -56,6 +56,42 @@ export default function CustomersManager({
     useState<CustomerWithDetails | null>(null);
   const [editNotes, setEditNotes] = useState("");
   const [savingNotes, setSavingNotes] = useState(false);
+  // Alta de clienta nueva
+  const [showNew, setShowNew] = useState(false);
+  const [nuevo, setNuevo] = useState({ nombre: "", celular: "", email: "", notasInternas: "" });
+  const [creating, setCreating] = useState(false);
+
+  const handleCreate = async () => {
+    if (!nuevo.nombre.trim() || !nuevo.celular.trim()) {
+      toast.error("El nombre y el celular son obligatorios.");
+      return;
+    }
+    setCreating(true);
+    try {
+      const res = await fetch("/api/admin/customers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(nuevo),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Error al registrar");
+      setCustomers((prev) => [
+        {
+          ...data.customer,
+          ultimaVisita: null,
+          citas: [],
+        },
+        ...prev,
+      ]);
+      setNuevo({ nombre: "", celular: "", email: "", notasInternas: "" });
+      setShowNew(false);
+      toast.success("Clienta registrada en la base de datos.");
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setCreating(false);
+    }
+  };
 
   const filteredCustomers = customers.filter(
     (c) =>
@@ -111,10 +147,88 @@ export default function CustomersManager({
             className="w-full pl-9 pr-4 py-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary"
           />
         </div>
-        <span className="text-xs text-gray-500 font-medium">
-          {filteredCustomers.length} clientes registrados
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-gray-500 font-medium hidden sm:inline">
+            {filteredCustomers.length} clientes registrados
+          </span>
+          <button
+            onClick={() => setShowNew(true)}
+            className="btn-primary text-xs py-2 px-4 inline-flex items-center gap-1.5 shrink-0"
+          >
+            <User className="w-3.5 h-3.5" /> Nueva clienta
+          </button>
+        </div>
       </div>
+
+      {/* Modal: registrar clienta nueva */}
+      {showNew && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+            <div className="px-5 py-4 border-b border-[#ECECEC] flex items-center justify-between">
+              <h2 className="font-bold text-[#1A1A1A]">Nueva clienta</h2>
+              <button onClick={() => setShowNew(false)} className="text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              <label className="block">
+                <span className="text-xs font-semibold text-[#6B6B6B]">Nombre *</span>
+                <input
+                  value={nuevo.nombre}
+                  onChange={(e) => setNuevo({ ...nuevo, nombre: e.target.value })}
+                  placeholder="Ej. María López"
+                  className="mt-1 w-full rounded-lg border border-[#E6D3DA] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#F3A6BC]"
+                />
+              </label>
+              <label className="block">
+                <span className="text-xs font-semibold text-[#6B6B6B]">Celular *</span>
+                <input
+                  value={nuevo.celular}
+                  onChange={(e) => setNuevo({ ...nuevo, celular: e.target.value })}
+                  placeholder="+51 999 999 999"
+                  className="mt-1 w-full rounded-lg border border-[#E6D3DA] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#F3A6BC]"
+                />
+              </label>
+              <label className="block">
+                <span className="text-xs font-semibold text-[#6B6B6B]">Correo (opcional)</span>
+                <input
+                  type="email"
+                  value={nuevo.email}
+                  onChange={(e) => setNuevo({ ...nuevo, email: e.target.value })}
+                  placeholder="correo@ejemplo.com"
+                  className="mt-1 w-full rounded-lg border border-[#E6D3DA] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#F3A6BC]"
+                />
+              </label>
+              <label className="block">
+                <span className="text-xs font-semibold text-[#6B6B6B]">Nota (opcional)</span>
+                <textarea
+                  rows={2}
+                  value={nuevo.notasInternas}
+                  onChange={(e) => setNuevo({ ...nuevo, notasInternas: e.target.value })}
+                  placeholder="Ej. Prefiere tonos nude, alérgica a..."
+                  className="mt-1 w-full rounded-lg border border-[#E6D3DA] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#F3A6BC] resize-none"
+                />
+              </label>
+            </div>
+            <div className="px-5 py-4 border-t border-[#ECECEC] flex justify-end gap-2">
+              <button
+                onClick={() => setShowNew(false)}
+                className="text-sm py-2 px-4 rounded-lg border border-[#E6D3DA] text-[#6B6B6B] hover:bg-gray-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleCreate}
+                disabled={creating}
+                className="btn-primary text-sm py-2 px-4 inline-flex items-center gap-1.5 disabled:opacity-60"
+              >
+                <Save className="w-4 h-4" />
+                {creating ? "Guardando..." : "Registrar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Grid of Customer Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

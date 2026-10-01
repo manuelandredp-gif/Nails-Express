@@ -33,9 +33,9 @@ export async function GET(
       );
     }
 
-    // Las trabajadoras vinculadas solo pueden consultar sus propias citas.
-    const esManager = session.rol === "OWNER" || session.rol === "ADMIN";
-    if (!esManager && session.staffId && appointment.staffId !== session.staffId) {
+    // Las manicuristas vinculadas solo pueden consultar sus propias citas
+    // (Recepción ve todas).
+    if (session.rol === "MANICURISTA" && session.staffId && appointment.staffId !== session.staffId) {
       return NextResponse.json(
         { error: "Solo puedes ver tus propias citas." },
         { status: 403 }
@@ -78,8 +78,8 @@ export async function PATCH(
     // Las trabajadoras solo pueden gestionar citas (atender, cobrar, reseñar),
     // nunca reprogramar, reasignar ni cancelar.
     if (!isManagerRole) {
-      // Si la trabajadora está vinculada a una manicurista, solo sus propias citas.
-      if (session.staffId && appointment.staffId !== session.staffId) {
+      // Las manicuristas vinculadas solo gestionan sus propias citas (Recepción, todas).
+      if (session.rol === "MANICURISTA" && session.staffId && appointment.staffId !== session.staffId) {
         return NextResponse.json(
           { error: "Solo puedes modificar tus propias citas." },
           { status: 403 }

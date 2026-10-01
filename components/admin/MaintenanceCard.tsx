@@ -1,17 +1,35 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Trash2, AlertTriangle } from "lucide-react";
 
 /**
  * Zona de mantenimiento: borra los datos de PRUEBA (citas, clientas, premios
  * y, opcionalmente, las manicuristas de ejemplo) para empezar con datos reales.
+ *
+ * OCULTA por defecto: se desbloquea haciendo 10 clics seguidos en
+ * «Configuración» en el menú lateral (truco secreto, ver AdminSidebar).
  */
 export default function MaintenanceCard() {
+  const [visible, setVisible] = useState(false);
   const [incluirManicuristas, setIncluirManicuristas] = useState(true);
   const [busy, setBusy] = useState(false);
   const [resultado, setResultado] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem("nx_maintenance") === "1") setVisible(true);
+    } catch {}
+    const show = () => {
+      setVisible(true);
+      toast.success("🔓 Zona de mantenimiento desbloqueada (al final de la página).");
+    };
+    window.addEventListener("nx-show-maintenance", show);
+    return () => window.removeEventListener("nx-show-maintenance", show);
+  }, []);
+
+  if (!visible) return null;
 
   const handleClean = async () => {
     const ok1 = window.confirm(

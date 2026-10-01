@@ -41,7 +41,7 @@ export async function GET() {
   }
 }
 
-/** Crea una trabajadora con acceso restringido (rol MANICURISTA). */
+/** Crea la cuenta de acceso de una empleada con el rol que asigne la administración. */
 export async function POST(request: NextRequest) {
   try {
     const session = await getAdminSession();
@@ -56,6 +56,12 @@ export async function POST(request: NextRequest) {
       .toLowerCase();
     const password = String(body.password || "");
     const staffId = body.staffId ? String(body.staffId) : null;
+
+    // Rol asignado por la administración
+    const ROLES_PERMITIDOS = ["MANICURISTA", "RECEPCION", "ADMIN"];
+    const rol = ROLES_PERMITIDOS.includes(String(body.rol))
+      ? String(body.rol)
+      : "MANICURISTA";
 
     if (!nombre || !email || !password) {
       return NextResponse.json(
@@ -94,7 +100,7 @@ export async function POST(request: NextRequest) {
         nombre,
         email,
         passwordHash: hashPassword(password),
-        rol: "MANICURISTA",
+        rol,
         staffId,
         activo: true,
       },
