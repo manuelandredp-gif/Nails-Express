@@ -39,7 +39,7 @@ const csp = [
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' data: https://fonts.gstatic.com",
   `connect-src 'self' ${supa}`.trim(),
-  "frame-src https://www.google.com https://maps.google.com",
+  "frame-src https://www.google.com https://maps.google.com https://maps.app.goo.gl https://*.google.com",
   "form-action 'self'",
   "upgrade-insecure-requests",
 ]
