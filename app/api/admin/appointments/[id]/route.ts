@@ -82,10 +82,27 @@ export async function PATCH(
       staffId,
       notasInternas,
       motivoCancelacion,
+      pagado,
+      resenaEstrellas,
+      resenaTexto,
     } = body;
 
     const dataToUpdate: any = {};
     const logDetails: string[] = [];
+
+    // Pago
+    if (pagado !== undefined) {
+      dataToUpdate.pagado = Boolean(pagado);
+      logDetails.push(pagado ? "Marcada como pagada" : "Marcada como no pagada");
+    }
+    // Reseña privada del cliente
+    if (resenaEstrellas !== undefined) {
+      dataToUpdate.resenaEstrellas =
+        resenaEstrellas === null ? null : parseInt(String(resenaEstrellas), 10);
+    }
+    if (resenaTexto !== undefined) {
+      dataToUpdate.resenaTexto = resenaTexto || null;
+    }
 
     // 1. Move or change staff (Validate zero overlap)
     if (startAt || staffId) {

@@ -132,6 +132,9 @@ model Appointment {
   canceladoPor      String?
   motivoCancelacion String?
   selloOtorgado     Boolean          @default(false) // evita contar el sello dos veces
+  pagado            Boolean          @default(false)
+  resenaEstrellas   Int?             // calificación privada del cliente (1-5)
+  resenaTexto       String?          // nota privada sobre el cliente/atención
   logs              AppointmentLog[]
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt

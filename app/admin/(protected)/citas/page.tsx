@@ -26,6 +26,9 @@ export default async function CitasPage() {
     estado: a.estado,
     origen: a.origen,
     notasCliente: a.notasCliente,
+    pagado: a.pagado,
+    resenaEstrellas: a.resenaEstrellas,
+    resenaTexto: a.resenaTexto,
     customer: {
       nombre: a.customer.nombre,
       celular: a.customer.celular,

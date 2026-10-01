@@ -3,17 +3,13 @@
 import React, { useState } from "react";
 import {
   Search,
-  Filter,
   Download,
-  Calendar,
-  Phone,
-  Scissors,
-  User,
   CheckCircle,
-  XCircle,
-  MoreVertical,
-  Plus,
   MessageCircle,
+  DollarSign,
+  Star,
+  X,
+  Check,
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -28,6 +24,9 @@ interface AppointmentItem {
   estado: string;
   origen: string;
   notasCliente?: string | null;
+  pagado?: boolean;
+  resenaEstrellas?: number | null;
+  resenaTexto?: string | null;
   customer: {
     nombre: string;
     celular: string;
@@ -53,6 +52,9 @@ export default function AppointmentsTable({
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [originFilter, setOriginFilter] = useState("all");
+  const [showHistorial, setShowHistorial] = useState(false);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [reviewFor, setReviewFor] = useState<AppointmentItem | null>(null);
 
   const filteredAppointments = appointments.filter((app) => {
     const q = search.toLowerCase();
@@ -62,13 +64,49 @@ export default function AppointmentsTable({
       app.customer.celular.includes(q) ||
       app.service.nombre.toLowerCase().includes(q);
 
+    // Por defecto se ocultan las completadas (quedan en el historial).
     const matchStatus =
-      statusFilter === "all" ? true : app.estado === statusFilter;
+      statusFilter === "all"
+        ? showHistorial || app.estado !== "COMPLETADA"
+        : app.estado === statusFilter;
     const matchOrigin =
       originFilter === "all" ? true : app.origen === originFilter;
 
     return matchSearch && matchStatus && matchOrigin;
   });
+
+  // Actualiza una cita (estado / pagado / reseña) vía API y refleja el cambio.
+  const updateAppointment = async (id: string, data: any, okMsg: string) => {
+    setBusyId(id);
+    try {
+      const res = await fetch(`/api/admin/appointments/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(result.error || "No se pudo actualizar la cita.");
+        return false;
+      }
+      setAppointments((prev) =>
+        prev.map((a) => (a.id === id ? { ...a, ...data } : a))
+      );
+      if (result.loyalty?.reward) {
+        toast.success("¡Cita completada! La clienta ganó un premio 🎁");
+      } else if (result.loyalty) {
+        toast.success(`¡Completada! Sello sumado (${result.loyalty.sellos}/${result.loyalty.meta}) 💅`);
+      } else {
+        toast.success(okMsg);
+      }
+      return true;
+    } catch {
+      toast.error("Error de conexión.");
+      return false;
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   const exportCsv = () => {
     const headers = [
@@ -157,6 +195,20 @@ export default function AppointmentsTable({
             <option value="TELEFONO">Teléfono</option>
           </select>
 
+          {/* Toggle historial (completadas) */}
+          <button
+            onClick={() => setShowHistorial((v) => !v)}
+            className={`text-xs py-2 px-3 inline-flex items-center gap-1.5 rounded-lg border transition-colors ${
+              showHistorial
+                ? "bg-primary text-white border-primary"
+                : "border-gray-200 text-gray-600 hover:border-primary"
+            }`}
+            title="Mostrar u ocultar las citas completadas"
+          >
+            <CheckCircle className="w-3.5 h-3.5" />
+            <span>{showHistorial ? "Ocultar completadas" : "Ver historial"}</span>
+          </button>
+
           {/* Export Button */}
           <button
             onClick={exportCsv}
@@ -227,33 +279,81 @@ export default function AppointmentsTable({
                     S/ {app.precio.toFixed(0)}
                   </td>
                   <td className="py-3.5 px-4">
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-[0.65rem] font-bold ${
-                        app.estado === "CONFIRMADA"
-                          ? "bg-green-100 text-green-700"
-                          : app.estado === "COMPLETADA"
-                          ? "bg-blue-100 text-blue-700"
-                          : app.estado === "CANCELADA"
-                          ? "bg-red-100 text-red-700"
-                          : "bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      {app.estado}
-                    </span>
+                    <div className="flex flex-col items-start gap-1">
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-[0.65rem] font-bold ${
+                          app.estado === "CONFIRMADA"
+                            ? "bg-green-100 text-green-700"
+                            : app.estado === "COMPLETADA"
+                            ? "bg-blue-100 text-blue-700"
+                            : app.estado === "CANCELADA"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-gray-100 text-gray-700"
+                        }`}
+                      >
+                        {app.estado}
+                      </span>
+                      {app.pagado && (
+                        <span className="px-2 py-0.5 rounded-full text-[0.6rem] font-bold bg-emerald-100 text-emerald-700 inline-flex items-center gap-0.5">
+                          <DollarSign className="w-2.5 h-2.5" /> Pagado
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="py-3.5 px-4 text-right">
-                    <a
-                      href={`https://wa.me/${app.customer.celular.replace(
-                        /[^\d]/g,
-                        ""
-                      )}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="p-1.5 text-gray-400 hover:text-green-600 inline-block"
-                      title="Contactar WhatsApp"
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                    </a>
+                    <div className="flex items-center justify-end gap-1">
+                      {/* Completar (solo si está activa) */}
+                      {(app.estado === "CONFIRMADA" || app.estado === "PENDIENTE") && (
+                        <button
+                          onClick={() =>
+                            updateAppointment(app.id, { estado: "COMPLETADA" }, "Cita completada.")
+                          }
+                          disabled={busyId === app.id}
+                          className="px-2 py-1 rounded-lg text-[0.65rem] font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 inline-flex items-center gap-1 disabled:opacity-50"
+                          title="Marcar como completada (suma el sello)"
+                        >
+                          <Check className="w-3 h-3" /> Completar
+                        </button>
+                      )}
+                      {/* Pagado (toggle) */}
+                      <button
+                        onClick={() =>
+                          updateAppointment(
+                            app.id,
+                            { pagado: !app.pagado },
+                            app.pagado ? "Marcada como no pagada." : "Marcada como pagada."
+                          )
+                        }
+                        disabled={busyId === app.id}
+                        className={`px-2 py-1 rounded-lg text-[0.65rem] font-bold inline-flex items-center gap-1 disabled:opacity-50 ${
+                          app.pagado
+                            ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                            : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                        }`}
+                        title="Marcar pago"
+                      >
+                        <DollarSign className="w-3 h-3" /> {app.pagado ? "Pagado" : "Pagar"}
+                      </button>
+                      {/* Reseña privada */}
+                      <button
+                        onClick={() => setReviewFor(app)}
+                        className="px-2 py-1 rounded-lg text-[0.65rem] font-bold bg-amber-50 text-amber-700 hover:bg-amber-100 inline-flex items-center gap-1"
+                        title="Nota / reseña privada del cliente"
+                      >
+                        <Star className={`w-3 h-3 ${app.resenaEstrellas ? "fill-amber-500 text-amber-500" : ""}`} />
+                        {app.resenaEstrellas ? app.resenaEstrellas : "Reseña"}
+                      </button>
+                      {/* WhatsApp */}
+                      <a
+                        href={`https://wa.me/${app.customer.celular.replace(/[^\d]/g, "")}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="p-1.5 text-gray-400 hover:text-green-600 inline-block"
+                        title="Contactar WhatsApp"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                      </a>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -266,6 +366,101 @@ export default function AppointmentsTable({
             No se encontraron citas con los filtros seleccionados.
           </div>
         )}
+      </div>
+
+      {reviewFor && (
+        <ReviewModal
+          appointment={reviewFor}
+          busy={busyId === reviewFor.id}
+          onClose={() => setReviewFor(null)}
+          onSave={async (estrellas, texto) => {
+            const ok = await updateAppointment(
+              reviewFor.id,
+              { resenaEstrellas: estrellas, resenaTexto: texto },
+              "Reseña guardada."
+            );
+            if (ok) setReviewFor(null);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function ReviewModal({
+  appointment,
+  busy,
+  onClose,
+  onSave,
+}: {
+  appointment: AppointmentItem;
+  busy: boolean;
+  onClose: () => void;
+  onSave: (estrellas: number | null, texto: string) => void;
+}) {
+  const [estrellas, setEstrellas] = useState<number>(appointment.resenaEstrellas || 0);
+  const [texto, setTexto] = useState<string>(appointment.resenaTexto || "");
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+      <div className="bg-white rounded-[20px] max-w-md w-full p-6 space-y-4 shadow-2xl">
+        <div className="flex items-start justify-between border-b pb-3">
+          <div>
+            <h3 className="text-lg font-bold text-[#1A1A1A]">Reseña privada</h3>
+            <p className="text-xs text-gray-500 mt-0.5">
+              {appointment.customer.nombre} · {appointment.service.nombre}
+            </p>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <p className="text-[0.7rem] text-gray-400">
+          Solo la ves vos en el panel. No se publica en la web.
+        </p>
+
+        <div>
+          <label className="block text-xs font-semibold text-gray-700 mb-1.5">Calificación</label>
+          <div className="flex items-center gap-1">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => setEstrellas(n === estrellas ? 0 : n)}
+                className="p-1"
+              >
+                <Star
+                  className={`w-7 h-7 ${n <= estrellas ? "fill-amber-400 text-amber-400" : "text-gray-300"}`}
+                />
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold text-gray-700 mb-1">Nota</label>
+          <textarea
+            rows={4}
+            value={texto}
+            onChange={(e) => setTexto(e.target.value)}
+            placeholder="Ej. Clienta muy puntual, le gustó el tono nude, volver a ofrecer diseño floral."
+            className="w-full px-3 py-2 text-xs border rounded-lg outline-none focus:border-primary resize-none"
+          />
+        </div>
+
+        <div className="flex justify-end gap-2 pt-2 border-t">
+          <button onClick={onClose} className="btn-outline text-xs py-2 px-4">
+            Cancelar
+          </button>
+          <button
+            onClick={() => onSave(estrellas || null, texto)}
+            disabled={busy}
+            className="btn-primary text-xs py-2 px-5 disabled:opacity-50"
+          >
+            {busy ? "Guardando..." : "Guardar reseña"}
+          </button>
+        </div>
       </div>
     </div>
   );
