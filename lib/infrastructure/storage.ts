@@ -25,18 +25,26 @@ export async function saveUpload(
     const supabase = createClient(supabaseUrl, serviceKey, {
       auth: { persistSession: false },
     });
-    const { error } = await supabase.storage
-      .from(bucket)
-      .upload(filename, buffer, { contentType, upsert: false });
-    if (error) {
-      const msg = (error as any)?.message || String(error);
-      // Mensaje accionable para el administrador.
-      if (/bucket not found/i.test(msg)) {
-        throw new Error(
-          `El bucket "${bucket}" no existe en Supabase Storage. Créalo (público) en Supabase → Storage.`
-        );
+
+    const subir = () =>
+      supabase.storage.from(bucket).upload(filename, buffer, { contentType, upsert: false });
+
+    let { error } = await subir();
+
+    // Autocuración: si el bucket no existe, se crea (público) y se reintenta,
+    // para que la dueña no tenga que configurar nada manualmente en Supabase.
+    if (error && /bucket not found/i.test((error as any)?.message || "")) {
+      const { error: createErr } = await supabase.storage.createBucket(bucket, {
+        public: true,
+      });
+      if (createErr && !/already exists/i.test(createErr.message)) {
+        throw new Error(`No se pudo crear el bucket "${bucket}": ${createErr.message}`);
       }
-      throw new Error(`Supabase Storage: ${msg}`);
+      ({ error } = await subir());
+    }
+
+    if (error) {
+      throw new Error(`Supabase Storage: ${(error as any)?.message || String(error)}`);
     }
     const { data } = supabase.storage.from(bucket).getPublicUrl(filename);
     return data.publicUrl;
