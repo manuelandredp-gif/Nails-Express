@@ -67,6 +67,17 @@ export default function SettingsPanels({ tab, form, set }: Props) {
               <Text k="facebookUrl" label="Facebook" />
             </div>
           </Card>
+          <Card title="Foto de la sección de contacto" icon={Images}>
+            <p className="text-xs text-[#6B6B6B] -mt-1">
+              Es la imagen que aparece junto a «Contáctanos» en la web.
+            </p>
+            <ImageField
+              label="Imagen"
+              value={form.contactoImagen ?? ""}
+              onChange={(v) => set("contactoImagen", v)}
+            />
+            <Text k="contactoImagenAlt" label="Texto alternativo de la imagen (SEO)" />
+          </Card>
         </>
       )}
 
