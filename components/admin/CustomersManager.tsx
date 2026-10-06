@@ -177,7 +177,7 @@ export default function CustomersManager({
                   value={nuevo.nombre}
                   onChange={(e) => setNuevo({ ...nuevo, nombre: e.target.value })}
                   placeholder="Ej. María López"
-                  className="mt-1 w-full rounded-lg border border-[#E6D3DA] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#F3A6BC]"
+                  className="mt-1 w-full rounded-lg border border-[#E1F4F1] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#9FE0D9]"
                 />
               </label>
               <label className="block">
@@ -186,7 +186,7 @@ export default function CustomersManager({
                   value={nuevo.celular}
                   onChange={(e) => setNuevo({ ...nuevo, celular: e.target.value })}
                   placeholder="+51 999 999 999"
-                  className="mt-1 w-full rounded-lg border border-[#E6D3DA] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#F3A6BC]"
+                  className="mt-1 w-full rounded-lg border border-[#E1F4F1] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#9FE0D9]"
                 />
               </label>
               <label className="block">
@@ -196,7 +196,7 @@ export default function CustomersManager({
                   value={nuevo.email}
                   onChange={(e) => setNuevo({ ...nuevo, email: e.target.value })}
                   placeholder="correo@ejemplo.com"
-                  className="mt-1 w-full rounded-lg border border-[#E6D3DA] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#F3A6BC]"
+                  className="mt-1 w-full rounded-lg border border-[#E1F4F1] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#9FE0D9]"
                 />
               </label>
               <label className="block">
@@ -206,14 +206,14 @@ export default function CustomersManager({
                   value={nuevo.notasInternas}
                   onChange={(e) => setNuevo({ ...nuevo, notasInternas: e.target.value })}
                   placeholder="Ej. Prefiere tonos nude, alérgica a..."
-                  className="mt-1 w-full rounded-lg border border-[#E6D3DA] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#F3A6BC] resize-none"
+                  className="mt-1 w-full rounded-lg border border-[#E1F4F1] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#9FE0D9] resize-none"
                 />
               </label>
             </div>
             <div className="px-5 py-4 border-t border-[#ECECEC] flex justify-end gap-2">
               <button
                 onClick={() => setShowNew(false)}
-                className="text-sm py-2 px-4 rounded-lg border border-[#E6D3DA] text-[#6B6B6B] hover:bg-gray-50"
+                className="text-sm py-2 px-4 rounded-lg border border-[#E1F4F1] text-[#6B6B6B] hover:bg-gray-50"
               >
                 Cancelar
               </button>
@@ -275,7 +275,7 @@ export default function CustomersManager({
                     <span className="block text-[0.65rem] text-gray-400 uppercase font-semibold">
                       Gastado
                     </span>
-                    <span className="font-extrabold text-sm text-[#E8707A]">
+                    <span className="font-extrabold text-sm text-[#3EA59E]">
                       S/ {totalSpent.toFixed(0)}
                     </span>
                   </div>
@@ -333,7 +333,7 @@ export default function CustomersManager({
                     )}
                   </div>
                   <div className="flex items-center gap-2 mt-2">
-                    <span className="inline-flex items-center gap-1 text-[0.7rem] font-bold text-[#C8455F] bg-[#FBE1E7] px-2 py-0.5 rounded-full">
+                    <span className="inline-flex items-center gap-1 text-[0.7rem] font-bold text-[#2AA79C] bg-[#E6F6F4] px-2 py-0.5 rounded-full">
                       💅 {selectedCustomer.sellos ?? 0} sellos
                     </span>
                     {selectedCustomer.nivel && selectedCustomer.nivel !== "Nueva" && (
@@ -418,7 +418,7 @@ export default function CustomersManager({
                         </span>
                       </div>
                       <div className="text-right">
-                        <span className="font-bold text-[#E8707A] block">
+                        <span className="font-bold text-[#3EA59E] block">
                           S/ {cita.precio}
                         </span>
                         <span className="text-[0.65rem] px-2 py-0.5 rounded-full font-bold bg-green-100 text-green-700">

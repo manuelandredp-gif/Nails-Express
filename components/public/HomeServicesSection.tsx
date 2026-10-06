@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, Calendar, Clock, Sparkles, ChevronDown } from "lucide-react";
@@ -47,6 +47,28 @@ export default function HomeServicesSection({
   const handleContinueBooking = () => {
     router.push(`/reservar?date=${selectedDate}&time=${selectedTime}`);
   };
+
+  // Cupos disponibles para hoy (#24) — usa un servicio de referencia y la API real.
+  const [cuposHoy, setCuposHoy] = useState<number | null>(null);
+  useEffect(() => {
+    const refId = services[0]?.id;
+    if (!refId) return;
+    const hoy = format(new Date(), "yyyy-MM-dd");
+    let activo = true;
+    fetch(`/api/availability?serviceId=${refId}&date=${hoy}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (!activo) return;
+        const libres = Array.isArray(d.slots)
+          ? d.slots.filter((s: { available: boolean }) => s.available).length
+          : 0;
+        setCuposHoy(libres);
+      })
+      .catch(() => activo && setCuposHoy(null));
+    return () => {
+      activo = false;
+    };
+  }, [services]);
 
   // 5 services matching mockup
   const displayServices = services.slice(0, 5);
@@ -103,7 +125,7 @@ export default function HomeServicesSection({
                   <span className="text-[11px] font-semibold text-gray-500">
                     Desde {currency} {srv.precio.toFixed(0)}
                   </span>
-                  <div className="w-6 h-6 rounded-full bg-[#FBEDED] text-[#E8707A] flex items-center justify-center shrink-0 group-hover:bg-[#E8707A] group-hover:text-white transition-colors">
+                  <div className="w-6 h-6 rounded-full bg-[#E6F6F4] text-[#3EA59E] flex items-center justify-center shrink-0 group-hover:bg-[#3EA59E] group-hover:text-white transition-colors">
                     <ArrowRight className="w-3 h-3" />
                   </div>
                 </div>
@@ -128,6 +150,19 @@ export default function HomeServicesSection({
                   <Sparkles className="w-5 h-5 text-primary" />
                 </div>
               </div>
+
+              {/* Cupos disponibles hoy (#24) */}
+              {cuposHoy !== null && (
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-[#E6F6F4] px-3 py-1 text-[11px] font-semibold text-[#2AA79C]">
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full rounded-full bg-[#5CC6BF] opacity-75 motion-safe:animate-ping" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-[#2AA79C]" />
+                  </span>
+                  {cuposHoy > 0
+                    ? `${cuposHoy} ${cuposHoy === 1 ? "cupo disponible" : "cupos disponibles"} hoy`
+                    : "Agenda abierta para los próximos días"}
+                </div>
+              )}
 
               {/* Form Controls */}
               <div className="space-y-3 pt-1">
@@ -181,7 +216,7 @@ export default function HomeServicesSection({
               </div>
 
               {/* Decorative soft petal in corner */}
-              <div className="absolute -bottom-6 -right-6 w-20 h-20 rounded-full bg-pink-100/50 blur-lg pointer-events-none" />
+              <div className="absolute -bottom-6 -right-6 w-20 h-20 rounded-full bg-[#E6F6F4]/60 blur-lg pointer-events-none" />
             </div>
           </div>
         </div>

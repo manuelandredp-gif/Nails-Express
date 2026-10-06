@@ -79,7 +79,7 @@ export default async function BlogPostPage({
 
         {/* Article Header */}
         <header className="space-y-4 mb-8">
-          <div className="inline-block px-3 py-1 bg-[#FAF3F3] text-[#E8707A] text-xs font-bold rounded-full">
+          <div className="inline-block px-3 py-1 bg-[#F8F5F0] text-[#3EA59E] text-xs font-bold rounded-full">
             {post.categoria}
           </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#1A1A1A] leading-tight tracking-tight">
@@ -123,7 +123,7 @@ export default async function BlogPostPage({
         />
 
         {/* CTA to Book */}
-        <div className="my-14 bg-[#FBEDED] border border-[#F5D8D8] rounded-[18px] p-8 text-center space-y-4">
+        <div className="my-14 bg-[#E6F6F4] border border-[#CFEDEA] rounded-[18px] p-8 text-center space-y-4">
           <h3 className="text-2xl font-bold text-[#1A1A1A]">
             {settings?.blogCtaTitulo}
           </h3>

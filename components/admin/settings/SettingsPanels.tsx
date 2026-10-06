@@ -276,7 +276,7 @@ export default function SettingsPanels({ tab, form, set }: Props) {
               k="mapaEmbedUrl"
               label="URL de Google Maps (embed)"
               rows={3}
-              hint='En Google Maps: Compartir → Insertar un mapa → copia solo la URL del atributo src="...".'
+              hint='Usa Compartir → Insertar un mapa → copia la URL del atributo src="...". Si lo dejas vacío o pegas un enlace normal, el mapa igual funciona usando la Latitud/Longitud de la sección SEO/Negocio.'
             />
           </Card>
         </>
@@ -314,7 +314,7 @@ export default function SettingsPanels({ tab, form, set }: Props) {
               <Text k="coloresTitulo" label="Título" />
               <Text k="coloresSubtitulo" label="Subtítulo" />
             </div>
-            <Area k="coloresLista" label="Colores" rows={6} hint="Uno por línea con el formato: Nombre|#hexadecimal  (ej. Rosa Blush|#F3A6BC)." />
+            <Area k="coloresLista" label="Colores" rows={6} hint="Uno por línea: Nombre|#hexadecimal|acabado  ·  El acabado es opcional: satinado, ojo-de-gato o mate (vacío = normal). Ej. Rojo Pasión|#2AA79C|satinado" />
           </Card>
 
           <Card title="Franja de Instagram" icon={Images}>

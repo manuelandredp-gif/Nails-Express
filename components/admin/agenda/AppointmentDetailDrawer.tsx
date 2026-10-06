@@ -206,7 +206,7 @@ export default function AppointmentDetailDrawer({
                     <DollarSign className="w-4 h-4 text-primary" />
                     <span>Precio:</span>
                   </span>
-                  <span className="font-black text-[#E8707A] text-base">
+                  <span className="font-black text-[#3EA59E] text-base">
                     S/ {app.precio.toFixed(0)}
                   </span>
                 </div>

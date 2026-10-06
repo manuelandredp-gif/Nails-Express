@@ -25,6 +25,9 @@ function MultiLine({ text }: { text: string }) {
 
 export default function Hero({ settings: s }: HeroProps) {
   const botonTexto = s.heroBoton.replace(/\s*→\s*$/, "");
+  // Video opcional del hero (sin tocar la base de datos): se activa con la
+  // variable NEXT_PUBLIC_HERO_VIDEO. Si no existe, se usa la imagen animada.
+  const heroVideo = process.env.NEXT_PUBLIC_HERO_VIDEO || "";
   const badges = [
     { Icon: Gem, titulo: s.heroBadge1Titulo, texto: s.heroBadge1Texto },
     { Icon: Clock, titulo: s.heroBadge2Titulo, texto: s.heroBadge2Texto },
@@ -86,9 +89,13 @@ export default function Hero({ settings: s }: HeroProps) {
                 )}
               </div>
               {s.heroNota && (
-                <p className="text-[11px] text-[#8E8E8E] font-medium tracking-wide">
-                  ✓ {s.heroNota}
-                </p>
+                <div className="inline-flex items-center gap-2 rounded-full bg-[#E6F6F4] border border-[#9FE0D9] px-3.5 py-1.5 text-[11px] font-semibold text-[#2AA79C] tracking-wide">
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full rounded-full bg-[#5CC6BF] opacity-75 motion-safe:animate-ping" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-[#2AA79C]" />
+                  </span>
+                  {s.heroNota}
+                </div>
               )}
             </div>
 
@@ -97,9 +104,9 @@ export default function Hero({ settings: s }: HeroProps) {
               <div className="pt-8 flex flex-wrap items-center gap-6 sm:gap-8 border-t border-gray-100">
                 {badges.map(({ Icon, titulo, texto }, i) => {
                   const tints = [
-                    "bg-[#FBE1E7] text-[#C8455F]",
+                    "bg-[#E6F6F4] text-[#2AA79C]",
                     "bg-[#E1F4F1] text-[#0E736A]",
-                    "bg-[#F1E7FA] text-[#8E5BC0]",
+                    "bg-[#E6F6F4] text-[#3EA59E]",
                   ];
                   return (
                     <div key={i} className="flex items-center gap-3">
@@ -120,14 +127,27 @@ export default function Hero({ settings: s }: HeroProps) {
           {/* Right Column: Hero Image with Calligraphy */}
           <div className="lg:col-span-6 relative flex justify-center lg:justify-end">
             <div className="relative w-full max-w-lg aspect-[4/3] sm:aspect-[1.15/1] rounded-[28px] overflow-hidden shadow-sm border border-white/60">
-              <Image
-                src={s.heroImagen}
-                alt={s.heroImagenAlt}
-                fill
-                priority
-                sizes="(max-width: 768px) 100vw, 600px"
-                className="object-cover object-center"
-              />
+              {heroVideo ? (
+                <video
+                  className="absolute inset-0 w-full h-full object-cover object-center"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  poster={s.heroImagen}
+                >
+                  <source src={heroVideo} />
+                </video>
+              ) : (
+                <Image
+                  src={s.heroImagen}
+                  alt={s.heroImagenAlt}
+                  fill
+                  priority
+                  sizes="(max-width: 768px) 100vw, 600px"
+                  className="object-cover object-center kenburns"
+                />
+              )}
 
               {s.heroCaligrafia && (
                 <div className="absolute bottom-5 right-6 select-none pointer-events-none text-right">

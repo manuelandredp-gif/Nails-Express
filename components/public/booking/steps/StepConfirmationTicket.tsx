@@ -49,7 +49,7 @@ export default function StepConfirmationTicket({
       .then((mod) => {
         if (cancelled) return;
         const confetti = mod.default;
-        const colors = ["#E86B86", "#F3A6BC", "#C79A4E", "#5CC6BF", "#FBE1E7"];
+        const colors = ["#46B8B0", "#9FE0D9", "#C79A4E", "#5CC6BF", "#E6F6F4"];
         confetti({ particleCount: 90, spread: 75, origin: { y: 0.35 }, colors });
         setTimeout(() => confetti({ particleCount: 50, angle: 60, spread: 60, origin: { x: 0, y: 0.5 }, colors }), 200);
         setTimeout(() => confetti({ particleCount: 50, angle: 120, spread: 60, origin: { x: 1, y: 0.5 }, colors }), 350);
@@ -73,6 +73,25 @@ export default function StepConfirmationTicket({
 
   const bookingCode = booking.codigo || "NX-PENDIENTE";
   const myBookingUrl = `/mis-citas?code=${bookingCode}`;
+
+  // Enlace "Agregar a Google Calendar" con la fecha/hora de la cita.
+  const gcalUrl = (() => {
+    try {
+      const start = new Date(booking.startAt);
+      const durMin = booking.duracionMinutos || 60;
+      const end = new Date(start.getTime() + durMin * 60000);
+      const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+      const text = `${booking.servicio || "Cita"} · ${nombreNegocio}`;
+      const details = `Reserva ${bookingCode}. Especialista: ${booking.manicurista || "por asignar"}.`;
+      return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
+        text
+      )}&dates=${fmt(start)}/${fmt(end)}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(
+        direccion || ""
+      )}`;
+    } catch {
+      return "";
+    }
+  })();
   const qrTargetUrl = typeof window !== "undefined"
     ? `${window.location.origin}${myBookingUrl}`
     : `https://nailsexpress.pe${myBookingUrl}`;
@@ -201,7 +220,7 @@ export default function StepConfirmationTicket({
 
             <div className="flex items-center justify-between pt-2">
               <span className="text-xs font-bold text-gray-700">Total a pagar en salón:</span>
-              <span className="text-lg font-black text-[#E8707A]">
+              <span className="text-lg font-black text-[#3EA59E]">
                 {currency} {booking.precio?.toFixed(0) || "0"}
               </span>
             </div>
@@ -234,6 +253,21 @@ export default function StepConfirmationTicket({
           </a>
         </div>
       </div>
+
+      {/* Agregar a Google Calendar */}
+      {gcalUrl && (
+        <div className="text-center">
+          <a
+            href={gcalUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-xs font-bold text-primary bg-[#E6F6F4] hover:bg-primary hover:text-white px-5 py-2.5 rounded-full transition-colors"
+          >
+            <Calendar className="w-4 h-4" />
+            <span>Agregar a Google Calendar</span>
+          </a>
+        </div>
+      )}
     </div>
   );
 }

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Phone, Mail, MapPin, Clock, Instagram, Facebook } from "lucide-react";
 import type { SiteSettings, SiteLink } from "@/lib/site-content";
 import { parseLinks } from "@/lib/site-content";
+import TikTokIcon from "@/components/public/TikTokIcon";
 
 interface FooterProps {
   settings: SiteSettings;
@@ -55,7 +56,7 @@ export default function Footer({ settings: s, categorias }: FooterProps) {
                   aria-label="TikTok"
                   className="w-9 h-9 rounded-full bg-[#1C1C1C] hover:bg-primary hover:text-white text-[#BBBBBB] flex items-center justify-center transition-colors"
                 >
-                  <span className="text-xs font-bold leading-none">Tk</span>
+                  <TikTokIcon className="w-4 h-4" />
                 </a>
               )}
               {s.facebookUrl && (

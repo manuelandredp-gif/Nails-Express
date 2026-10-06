@@ -129,7 +129,7 @@ export default function MisCitasContent({
         {/* Search Box */}
         <form
           onSubmit={handleSearchSubmit}
-          className="bg-[#FAF3F3] border border-[#F2DADA] rounded-[18px] p-6 mb-10 shadow-xs"
+          className="bg-[#F8F5F0] border border-[#E1F4F1] rounded-[18px] p-6 mb-10 shadow-xs"
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
             <div>
@@ -227,7 +227,7 @@ export default function MisCitasContent({
                   <span className="font-semibold text-[#1A1A1A]">
                     {appointment.service?.nombre}
                   </span>
-                  <span className="block text-xs text-[#E8707A] font-semibold mt-0.5">
+                  <span className="block text-xs text-[#3EA59E] font-semibold mt-0.5">
                     S/ {appointment.precio}
                   </span>
                 </div>

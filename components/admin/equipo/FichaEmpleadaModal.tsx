@@ -81,11 +81,11 @@ export default function FichaEmpleadaModal({ initial, busy, onClose, onSave }: P
                 type="color"
                 value={ficha.color}
                 onChange={(e) => setFicha({ ...ficha, color: e.target.value })}
-                className="mt-1 h-10 w-full rounded-lg border border-[#E6D3DA] cursor-pointer"
+                className="mt-1 h-10 w-full rounded-lg border border-[#E1F4F1] cursor-pointer"
               />
             </label>
           </div>
-          <p className="text-[0.7rem] text-[#9B8890]">
+          <p className="text-[0.7rem] text-[#8E8E8E]">
             * La empleada aparece en la agenda al guardarla. Luego dale su acceso al
             panel con el botón «Dar acceso» y asígnale un rol.
           </p>
@@ -94,7 +94,7 @@ export default function FichaEmpleadaModal({ initial, busy, onClose, onSave }: P
         <div className="px-5 py-4 border-t border-[#ECECEC] flex justify-end gap-2 sticky bottom-0 bg-white">
           <button
             onClick={onClose}
-            className="text-sm py-2 px-4 rounded-lg border border-[#E6D3DA] text-[#6B6B6B] hover:bg-gray-50"
+            className="text-sm py-2 px-4 rounded-lg border border-[#E1F4F1] text-[#6B6B6B] hover:bg-gray-50"
           >
             Cancelar
           </button>

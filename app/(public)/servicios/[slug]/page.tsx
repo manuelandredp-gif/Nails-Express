@@ -104,7 +104,7 @@ export default async function ServiceDetailPage({
               <h1 className="text-3xl sm:text-4xl font-bold text-[#1A1A1A] tracking-tight">
                 {service.nombre}
               </h1>
-              <div className="mt-2 text-2xl font-bold text-[#E8707A]">
+              <div className="mt-2 text-2xl font-bold text-[#3EA59E]">
                 {settings?.moneda || "S/"} {service.precio.toFixed(0)}
               </div>
             </div>

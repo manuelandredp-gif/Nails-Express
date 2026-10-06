@@ -157,7 +157,7 @@ export default function StepDateTimeSelect({
               : "bg-gray-100 text-gray-600 hover:bg-gray-200"
           }`}
         >
-          <Moon className="w-3 h-3 text-indigo-500" />
+          <Moon className="w-3 h-3 text-primary" />
           <span>Tarde (14:00 - 20:00)</span>
         </button>
       </div>

@@ -177,10 +177,10 @@ function NosotrosPreview({ f }: { f: Data }) {
         </div>
       )}
       {metrics.length > 0 && (
-        <div className="bg-[#FBEDED] rounded-xl p-3 grid grid-cols-3 gap-2 border border-[#F5D8D8]">
+        <div className="bg-[#E6F6F4] rounded-xl p-3 grid grid-cols-3 gap-2 border border-[#CFEDEA]">
           {metrics.map(({ Icon, v, l }, i) => (
             <div key={i} className="text-center">
-              <Icon className="w-4 h-4 text-[#E8707A] mx-auto mb-1" />
+              <Icon className="w-4 h-4 text-[#3EA59E] mx-auto mb-1" />
               <div className="text-xs font-extrabold text-[#1A1A1A]">{v}</div>
               <div className="text-[0.5rem] text-[#6B6B6B]">{l}</div>
             </div>
@@ -214,12 +214,12 @@ function ContactoPreview({ f }: { f: Data }) {
       </div>
       <div className="flex items-center gap-2">
         {f.instagramUrl && (
-          <span className="w-6 h-6 rounded-full bg-[#FBEDED] flex items-center justify-center">
+          <span className="w-6 h-6 rounded-full bg-[#E6F6F4] flex items-center justify-center">
             <Instagram className="w-3 h-3 text-[#1A1A1A]" />
           </span>
         )}
         {f.facebookUrl && (
-          <span className="w-6 h-6 rounded-full bg-[#FBEDED] flex items-center justify-center">
+          <span className="w-6 h-6 rounded-full bg-[#E6F6F4] flex items-center justify-center">
             <Facebook className="w-3 h-3 text-[#1A1A1A]" />
           </span>
         )}
@@ -318,39 +318,39 @@ function StampsPreview({ f }: { f: Data }) {
   const sellos = Math.min(meta, Math.round(meta * 0.6));
   return (
     <div className="p-4">
-      <div className="relative overflow-hidden rounded-2xl border border-[#EFCAD2] bg-[radial-gradient(130%_100%_at_80%_-10%,#FBE1E7,transparent_55%),#fff] p-4">
+      <div className="relative overflow-hidden rounded-2xl border border-[#CFEDEA] bg-[radial-gradient(130%_100%_at_80%_-10%,#E6F6F4,transparent_55%),#fff] p-4">
         <div className="flex items-start justify-between gap-2">
           <div>
-            <div className="text-[0.5rem] text-[#B79AA1]">Tarjeta de sellos</div>
-            <div className="text-sm font-bold text-[#2A1E22] leading-tight">
+            <div className="text-[0.5rem] text-[#8E8E8E]">Tarjeta de sellos</div>
+            <div className="text-sm font-bold text-[#1A1A1A] leading-tight">
               {f.sellosTitulo || "Tu tarjeta de sellos"}
             </div>
           </div>
-          <span className="text-[0.55rem] font-bold text-[#C8455F] bg-[#FBE1E7] rounded-full px-2 py-0.5">
+          <span className="text-[0.55rem] font-bold text-[#2AA79C] bg-[#E6F6F4] rounded-full px-2 py-0.5">
             {sellos} de {meta}
           </span>
         </div>
-        <p className="text-[0.6rem] text-[#8A6B72] mt-0.5">{f.sellosSubtitulo}</p>
+        <p className="text-[0.6rem] text-[#6B6B6B] mt-0.5">{f.sellosSubtitulo}</p>
         <div className={`grid ${meta > 8 ? "grid-cols-5" : "grid-cols-4"} gap-1.5 mt-3`}>
           {Array.from({ length: meta }).map((_, i) => (
             <div
               key={i}
               className={`aspect-square rounded-lg flex items-center justify-center ${
                 i < sellos
-                  ? "bg-gradient-to-br from-[#F6B9C8] to-[#FBE1E7] border border-[#E8707A]/40"
-                  : "border border-dashed border-[#EFCAD2] bg-[#FDECEE]/60"
+                  ? "bg-gradient-to-br from-[#9FE0D9] to-[#E6F6F4] border border-[#3EA59E]/40"
+                  : "border border-dashed border-[#CFEDEA] bg-[#F0FAF9]/60"
               }`}
             >
               {i < sellos ? (
-                <span className="text-[#E86B86] text-[0.7rem]">●</span>
+                <span className="text-[#46B8B0] text-[0.7rem]">●</span>
               ) : (
-                <span className="text-[0.5rem] text-[#C99AA6] font-bold">{i + 1}</span>
+                <span className="text-[0.5rem] text-[#BBBBBB] font-bold">{i + 1}</span>
               )}
             </div>
           ))}
         </div>
-        <div className="mt-3 pt-2 border-t border-dashed border-[#EFCAD2] text-[0.6rem] text-[#8A6B72]">
-          Premio: <b className="text-[#2A1E22]">{f.sellosPremio}</b>
+        <div className="mt-3 pt-2 border-t border-dashed border-[#CFEDEA] text-[0.6rem] text-[#6B6B6B]">
+          Premio: <b className="text-[#1A1A1A]">{f.sellosPremio}</b>
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import React from "react";
 import { prisma } from "@/lib/db";
-import { getSiteSettings, parsePairs } from "@/lib/site-content";
+import { getSiteSettings, parsePairs, parseColores, INSTAGRAM_CATEGORIA } from "@/lib/site-content";
 import Hero from "@/components/public/Hero";
 import HomeServicesSection from "@/components/public/HomeServicesSection";
 import AboutSection from "@/components/public/AboutSection";
@@ -19,7 +19,7 @@ import CtaBanner from "@/components/public/CtaBanner";
 export const revalidate = 60; // ISR revalidation
 
 export default async function HomePage() {
-  const [settings, services, galleryItems, posts, faqs, testimonios] = await Promise.all([
+  const [settings, services, galleryItems, instagramItems, posts, faqs, testimonios, horarios] = await Promise.all([
     getSiteSettings(),
     prisma.service.findMany({
       where: { activo: true },
@@ -27,9 +27,14 @@ export default async function HomePage() {
       take: 6,
     }),
     prisma.galleryItem.findMany({
-      where: { visible: true },
+      where: { visible: true, categoria: { not: INSTAGRAM_CATEGORIA } },
       orderBy: { orden: "asc" },
       take: 8,
+    }),
+    prisma.galleryItem.findMany({
+      where: { visible: true, categoria: INSTAGRAM_CATEGORIA },
+      orderBy: { orden: "asc" },
+      take: 6,
     }),
     prisma.post.findMany({
       where: { estado: "PUBLICADO" },
@@ -46,10 +51,16 @@ export default async function HomePage() {
       orderBy: { orden: "asc" },
       take: 8,
     }),
+    prisma.businessHours.findMany({
+      where: { staffId: null },
+      select: { diaSemana: true, horaApertura: true, horaCierre: true, cerrado: true },
+    }),
   ]);
 
   const beneficios = parsePairs(settings.beneficios).map(([titulo, texto]) => ({ titulo, texto }));
-  const colores = parsePairs(settings.coloresLista).map(([nombre, hex]) => ({ nombre, hex }));
+  const colores = parseColores(settings.coloresLista);
+  // La franja de Instagram usa sus propias fotos; si aún no hay, cae a la galería.
+  const instagramFotos = instagramItems.length > 0 ? instagramItems : galleryItems;
 
   return (
     <div className="space-y-0">
@@ -103,6 +114,7 @@ export default async function HomePage() {
           items={galleryItems}
           titulo={settings.galeriaTitulo}
           subtitulo={settings.galeriaSubtitulo}
+          marca={settings.nombreNegocio}
         />
       </Reveal>
 
@@ -128,10 +140,10 @@ export default async function HomePage() {
         </Reveal>
       )}
 
-      {settings.instagramActivo && galleryItems.length > 0 && (
+      {settings.instagramActivo && instagramFotos.length > 0 && (
         <Reveal>
           <InstagramStrip
-            fotos={galleryItems}
+            fotos={instagramFotos}
             usuario={settings.instagramUsuario}
             url={settings.instagramUrl}
           />
@@ -165,7 +177,7 @@ export default async function HomePage() {
       </Reveal>
 
       <Reveal>
-        <ContactSection settings={settings} />
+        <ContactSection settings={settings} horarios={horarios} />
       </Reveal>
     </div>
   );

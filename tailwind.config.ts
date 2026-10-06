@@ -16,15 +16,23 @@ const config: Config = {
           light: "#E6F6F4",
           soft: "#F0FAF9",
         },
+        // "blush" conserva el nombre por compatibilidad, pero ahora es PERLA.
         blush: {
-          DEFAULT: "#F9E3E3",
-          light: "#FBEDED",
-          soft: "#FDF4F4",
-          border: "#F5D6D6",
+          DEFAULT: "#F1EDE6",
+          light: "#F7F4EE",
+          soft: "#FBFAF7",
+          border: "#E7E1D6",
         },
+        perla: {
+          DEFAULT: "#F1EDE6",
+          light: "#F7F4EE",
+          soft: "#FBFAF7",
+          border: "#E7E1D6",
+        },
+        // "accent.rose" conserva el nombre, pero ahora es CELESTE oscuro.
         accent: {
-          rose: "#E8707A",
-          roseLight: "#FCEBEB",
+          rose: "#3EA59E",
+          roseLight: "#E6F6F4",
         },
         dark: {
           DEFAULT: "#1A1A1A",

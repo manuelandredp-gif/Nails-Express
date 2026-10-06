@@ -252,13 +252,13 @@ export default function TeamAccessManager({ empleadas, managers, miUserId }: Pro
         <div className="px-5 py-4 border-b border-[#ECECEC] flex items-center gap-2">
           <ShieldCheck className="w-5 h-5 text-[#5CC6BF]" />
           <h2 className="font-bold text-[#1A1A1A]">Mi equipo</h2>
-          <span className="ml-auto text-xs text-[#9B8890]">
+          <span className="ml-auto text-xs text-[#8E8E8E]">
             {rows.filter((r) => r.cuenta).length}/{rows.length} con acceso
           </span>
         </div>
 
         {rows.length === 0 ? (
-          <p className="p-8 text-center text-sm text-[#9B8890]">
+          <p className="p-8 text-center text-sm text-[#8E8E8E]">
             Aún no has registrado empleadas. Usa «Agregar empleada» para crear la
             primera: aparecerá en la agenda y podrás darle acceso al panel.
           </p>
@@ -297,7 +297,7 @@ export default function TeamAccessManager({ empleadas, managers, miUserId }: Pro
                     </p>
 
                     {/* Ficha resumida */}
-                    <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-[0.7rem] text-[#9B8890]">
+                    <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-[0.7rem] text-[#8E8E8E]">
                       {m.dni && (
                         <span className="inline-flex items-center gap-1">
                           <IdCard className="w-3 h-3" /> DNI {m.dni}
@@ -326,7 +326,7 @@ export default function TeamAccessManager({ empleadas, managers, miUserId }: Pro
                           <CheckCircle2 className="w-3 h-3" /> Entra con {m.cuenta.email}
                         </span>
                       ) : (
-                        <span className="text-[#9B8890] inline-flex items-center gap-1">
+                        <span className="text-[#8E8E8E] inline-flex items-center gap-1">
                           <Lock className="w-3 h-3" /> Sin acceso al panel
                         </span>
                       )}
@@ -347,7 +347,7 @@ export default function TeamAccessManager({ empleadas, managers, miUserId }: Pro
                           color: m.color,
                         })
                       }
-                      className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-[#E6D3DA] text-[#6B6B6B] hover:bg-gray-50 transition-colors"
+                      className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-[#E1F4F1] text-[#6B6B6B] hover:bg-gray-50 transition-colors"
                     >
                       <Pencil className="w-3.5 h-3.5" /> Editar
                     </button>
@@ -364,7 +364,7 @@ export default function TeamAccessManager({ empleadas, managers, miUserId }: Pro
                               `Rol cambiado a ${ROL_NOMBRE[e.target.value]}.`
                             )
                           }
-                          className="text-xs font-semibold px-2 py-1.5 rounded-lg border border-[#E6D3DA] bg-white text-[#1A1A1A] disabled:opacity-50"
+                          className="text-xs font-semibold px-2 py-1.5 rounded-lg border border-[#E1F4F1] bg-white text-[#1A1A1A] disabled:opacity-50"
                           title="Cambiar rol"
                         >
                           {ROLES.map((r) => (
@@ -397,7 +397,7 @@ export default function TeamAccessManager({ empleadas, managers, miUserId }: Pro
                         <button
                           onClick={() => resetClave(m)}
                           disabled={busyId === m.staffId}
-                          className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-[#E6D3DA] text-[#6B6B6B] hover:bg-gray-50 transition-colors disabled:opacity-50"
+                          className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-[#E1F4F1] text-[#6B6B6B] hover:bg-gray-50 transition-colors disabled:opacity-50"
                           title="Cambiar contraseña"
                         >
                           <KeyRound className="w-3.5 h-3.5" />
@@ -460,7 +460,7 @@ export default function TeamAccessManager({ empleadas, managers, miUserId }: Pro
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-[#1A1A1A] truncate">{u.nombre}</p>
-                <p className="text-xs text-[#9B8890] truncate">{u.email}</p>
+                <p className="text-xs text-[#8E8E8E] truncate">{u.email}</p>
               </div>
               <span className={`ml-auto text-[0.65rem] px-2 py-0.5 rounded-full font-semibold ${ROL_CHIP[u.rol]}`}>
                 {ROL_NOMBRE[u.rol] || u.rol}

@@ -41,7 +41,7 @@ export const FICHA_VACIA: FichaDraft = {
   telefono: "",
   email: "",
   direccion: "",
-  color: "#E26D9A",
+  color: "#3EA59E",
 };
 
 export const ROLES = [
@@ -54,7 +54,7 @@ export const ROL_CHIP: Record<string, string> = {
   OWNER: "bg-primary/15 text-primary",
   ADMIN: "bg-purple-100 text-purple-700",
   RECEPCION: "bg-blue-100 text-blue-700",
-  MANICURISTA: "bg-pink-100 text-pink-700",
+  MANICURISTA: "bg-[#E6F6F4] text-[#2AA79C]",
 };
 
 export const ROL_NOMBRE: Record<string, string> = {
@@ -65,4 +65,4 @@ export const ROL_NOMBRE: Record<string, string> = {
 };
 
 export const inputCls =
-  "mt-1 w-full rounded-lg border border-[#E6D3DA] px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#F3A6BC]";
+  "mt-1 w-full rounded-lg border border-[#E1F4F1] px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#9FE0D9]";

@@ -231,7 +231,7 @@ export default function AppointmentsTable({ initialAppointments }: AppointmentsT
                       {app.staff.nombre}
                     </span>
                   </td>
-                  <td className="py-3.5 px-4 font-bold text-[#E8707A]">S/ {app.precio.toFixed(0)}</td>
+                  <td className="py-3.5 px-4 font-bold text-[#3EA59E]">S/ {app.precio.toFixed(0)}</td>
                   <td className="py-3.5 px-4">
                     <div className="flex flex-col items-start gap-1">
                       <span

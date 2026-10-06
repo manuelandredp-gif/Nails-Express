@@ -65,7 +65,7 @@ export default function SalonCapacityBar({
         <div
           className={`h-full rounded-full transition-all duration-500 ${
             occupancyPercent > 80
-              ? "bg-gradient-to-r from-primary to-[#E8707A]"
+              ? "bg-gradient-to-r from-primary to-[#3EA59E]"
               : "bg-gradient-to-r from-primary/80 to-primary"
           }`}
           style={{ width: `${Math.max(8, occupancyPercent)}%` }}

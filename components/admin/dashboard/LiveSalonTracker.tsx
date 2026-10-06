@@ -72,13 +72,13 @@ export default function LiveSalonTracker({
 
   if (nextApp) {
     return (
-      <div className="bg-[#FAF3F3] border border-[#F2DADA] rounded-[20px] p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-[#F8F5F0] border border-[#E1F4F1] rounded-[20px] p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-[#E8707A]/15 text-[#E8707A] flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-full bg-[#3EA59E]/15 text-[#3EA59E] flex items-center justify-center shrink-0">
             <Clock className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-xs font-bold text-[#E8707A] uppercase tracking-wider">
+            <span className="text-xs font-bold text-[#3EA59E] uppercase tracking-wider">
               Próxima Cita en Salón
             </span>
             <h3 className="text-base font-bold text-[#1A1A1A]">

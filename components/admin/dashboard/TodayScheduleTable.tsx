@@ -61,7 +61,7 @@ export default function TodayScheduleTable({
                     <Scissors className="w-3 h-3 text-primary" />
                     <span>{app.service.nombre}</span>
                     <span>•</span>
-                    <span className="font-semibold text-[#E8707A]">
+                    <span className="font-semibold text-[#3EA59E]">
                       {currency} {app.precio.toFixed(0)}
                     </span>
                   </p>

@@ -57,19 +57,19 @@ export default function AboutSection({ settings: s }: AboutSectionProps) {
 
         {/* Metrics Strip */}
         {metrics.length > 0 && (
-          <div className="bg-[#FBEDED] rounded-[18px] py-8 px-6 sm:px-12 grid grid-cols-1 md:grid-cols-3 gap-8 text-center items-center border border-[#F5D8D8]">
+          <div className="bg-[#E6F6F4] rounded-[18px] py-8 px-6 sm:px-12 grid grid-cols-1 md:grid-cols-3 gap-8 text-center items-center border border-[#CFEDEA]">
             {metrics.map(({ Icon, valor, label, fill }, i) => (
               <div
                 key={i}
                 className={`flex items-center justify-center space-x-4 ${
                   i === 1
-                    ? "border-y md:border-y-0 md:border-x border-[#F0CDCD] py-4 md:py-0"
+                    ? "border-y md:border-y-0 md:border-x border-[#CFEDEA] py-4 md:py-0"
                     : ""
                 }`}
               >
-                <div className="w-12 h-12 rounded-full bg-white/90 text-[#E8707A] flex items-center justify-center shadow-sm">
+                <div className="w-12 h-12 rounded-full bg-white/90 text-[#3EA59E] flex items-center justify-center shadow-sm">
                   <Icon
-                    className={`w-6 h-6 ${fill ? "fill-[#E8707A]/20" : ""}`}
+                    className={`w-6 h-6 ${fill ? "fill-[#3EA59E]/20" : ""}`}
                     strokeWidth={1.5}
                   />
                 </div>

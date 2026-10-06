@@ -44,7 +44,7 @@ export default function RevenueChart({
               <div
                 className={`w-full rounded-t-lg transition-all ${
                   isMax
-                    ? "bg-gradient-to-t from-[#E86B86] to-[#F3A6BC]"
+                    ? "bg-gradient-to-t from-[#46B8B0] to-[#9FE0D9]"
                     : "bg-gradient-to-t from-[#5CC6BF] to-[#9FE0D9]"
                 }`}
                 style={{ height: `${Math.max(4, h)}%` }}

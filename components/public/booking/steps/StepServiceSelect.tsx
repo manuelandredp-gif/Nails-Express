@@ -60,7 +60,7 @@ export default function StepServiceSelect({
                   {srv.descripcionCorta}
                 </p>
                 <div className="flex items-center gap-3 mt-2">
-                  <span className="text-sm font-black text-[#E8707A]">
+                  <span className="text-sm font-black text-[#3EA59E]">
                     {currency} {srv.precio.toFixed(0)}
                   </span>
                   <span className="text-xs text-[#8E8E8E] flex items-center gap-1">

@@ -113,7 +113,7 @@ function AdminLoginForm() {
             </div>
 
             {/* Quick Demo Credentials Info */}
-            <div className="bg-[#FAF3F3] p-3 rounded-lg border border-[#F2DADA] text-xs text-[#6B6B6B] flex items-start gap-2">
+            <div className="bg-[#F8F5F0] p-3 rounded-lg border border-[#E1F4F1] text-xs text-[#6B6B6B] flex items-start gap-2">
               <ShieldCheck className="w-4 h-4 text-primary shrink-0 mt-0.5" />
               <div>
                 <strong>Acceso semilla:</strong> <br />

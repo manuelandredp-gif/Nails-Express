@@ -2,17 +2,16 @@ import React from "react";
 import { prisma } from "@/lib/db";
 import { requireManager } from "@/lib/auth";
 import { INSTAGRAM_CATEGORIA } from "@/lib/site-content";
-import GalleryManager from "@/components/admin/GalleryManager";
+import InstagramManager from "@/components/admin/InstagramManager";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminGaleriaPage() {
+export default async function AdminInstagramPage() {
   await requireManager();
-  // Las fotos de Instagram tienen su propia sección en el admin.
   const items = await prisma.galleryItem.findMany({
-    where: { categoria: { not: INSTAGRAM_CATEGORIA } },
+    where: { categoria: INSTAGRAM_CATEGORIA },
     orderBy: { orden: "asc" },
   });
 
-  return <GalleryManager initialItems={items} />;
+  return <InstagramManager initialItems={items} />;
 }

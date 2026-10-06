@@ -220,7 +220,7 @@ export default function ServicesManager({
                 <h3 className="font-bold text-base text-[#1A1A1A]">
                   {srv.nombre}
                 </h3>
-                <span className="font-bold text-sm text-[#E8707A]">
+                <span className="font-bold text-sm text-[#3EA59E]">
                   {srv.precioDesde ? "Desde " : ""}S/ {srv.precio}
                 </span>
               </div>

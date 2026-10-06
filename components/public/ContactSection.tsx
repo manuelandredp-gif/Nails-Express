@@ -2,16 +2,20 @@ import React from "react";
 import Image from "next/image";
 import { Phone, Mail, MapPin, Clock, Instagram, Facebook, MessageCircle } from "lucide-react";
 import type { SiteSettings } from "@/lib/site-content";
-import { whatsappLink } from "@/lib/site-content";
+import { whatsappLink, buildMapEmbedUrl } from "@/lib/site-content";
+import TikTokIcon from "@/components/public/TikTokIcon";
+import OpenStatus, { type HoursDay } from "@/components/public/OpenStatus";
 
 interface ContactSectionProps {
   settings: SiteSettings;
   showMap?: boolean;
+  horarios?: HoursDay[];
 }
 
-export default function ContactSection({ settings: s, showMap }: ContactSectionProps) {
+export default function ContactSection({ settings: s, showMap, horarios }: ContactSectionProps) {
   const whatsappUrl = whatsappLink(s.whatsapp, s.whatsappMensaje);
-  const mapVisible = (showMap ?? true) && s.mostrarMapa && s.mapaEmbedUrl;
+  const mapEmbedUrl = buildMapEmbedUrl(s);
+  const mapVisible = (showMap ?? true) && s.mostrarMapa && !!mapEmbedUrl;
 
   return (
     <section className="py-16 sm:py-20 sec-blush">
@@ -75,7 +79,10 @@ export default function ContactSection({ settings: s, showMap }: ContactSectionP
                   <div className="w-10 h-10 rounded-full border border-[#ECECEC] flex items-center justify-center text-[#1A1A1A]">
                     <Clock className="w-4 h-4 text-[#1A1A1A]" strokeWidth={1.5} />
                   </div>
-                  <span className="text-sm font-medium text-[#1A1A1A]">{s.horarioVisible}</span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm font-medium text-[#1A1A1A]">{s.horarioVisible}</span>
+                    {horarios && horarios.length > 0 && <OpenStatus hours={horarios} />}
+                  </div>
                 </div>
               )}
             </div>
@@ -89,7 +96,7 @@ export default function ContactSection({ settings: s, showMap }: ContactSectionP
                     target="_blank"
                     rel="noreferrer"
                     aria-label="Instagram"
-                    className="w-10 h-10 rounded-full bg-[#FBEDED] hover:bg-primary text-[#1A1A1A] hover:text-white flex items-center justify-center transition-colors"
+                    className="w-10 h-10 rounded-full bg-[#E6F6F4] hover:bg-primary text-[#1A1A1A] hover:text-white flex items-center justify-center transition-colors"
                   >
                     <Instagram className="w-4 h-4" />
                   </a>
@@ -100,9 +107,9 @@ export default function ContactSection({ settings: s, showMap }: ContactSectionP
                     target="_blank"
                     rel="noreferrer"
                     aria-label="TikTok"
-                    className="w-10 h-10 rounded-full bg-[#FBEDED] hover:bg-primary text-[#1A1A1A] hover:text-white flex items-center justify-center transition-colors"
+                    className="w-10 h-10 rounded-full bg-[#E6F6F4] hover:bg-primary text-[#1A1A1A] hover:text-white flex items-center justify-center transition-colors"
                   >
-                    <span className="text-xs font-bold leading-none">Tk</span>
+                    <TikTokIcon className="w-4 h-4" />
                   </a>
                 )}
                 {s.facebookUrl && (
@@ -111,7 +118,7 @@ export default function ContactSection({ settings: s, showMap }: ContactSectionP
                     target="_blank"
                     rel="noreferrer"
                     aria-label="Facebook"
-                    className="w-10 h-10 rounded-full bg-[#FBEDED] hover:bg-primary text-[#1A1A1A] hover:text-white flex items-center justify-center transition-colors"
+                    className="w-10 h-10 rounded-full bg-[#E6F6F4] hover:bg-primary text-[#1A1A1A] hover:text-white flex items-center justify-center transition-colors"
                   >
                     <Facebook className="w-4 h-4" />
                   </a>
@@ -150,7 +157,7 @@ export default function ContactSection({ settings: s, showMap }: ContactSectionP
         {mapVisible && (
           <div className="mt-14 rounded-[18px] overflow-hidden border border-[#ECECEC] shadow-sm">
             <iframe
-              src={s.mapaEmbedUrl}
+              src={mapEmbedUrl}
               width="100%"
               height="280"
               style={{ border: 0 }}

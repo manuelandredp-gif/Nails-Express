@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { format, addDays } from "date-fns";
+import { es } from "date-fns/locale";
 import { toast } from "sonner";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, Sparkles } from "lucide-react";
@@ -172,6 +173,37 @@ export default function BookingWizard({
             <Sparkles className="w-3.5 h-3.5" />
             <span>Garantía Cero Solapamiento</span>
           </div>
+        </div>
+      )}
+
+      {/* Barra de progreso (pasos 1-3) */}
+      {state.step < 4 && (
+        <div className="-mt-4 mb-6">
+          <div className="h-1.5 w-full rounded-full bg-gray-100 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-[#5CC6BF] to-[#2AA79C] transition-all duration-500 ease-out"
+              style={{ width: `${((state.step - 1) / 2) * 100}%` }}
+            />
+          </div>
+          <p className="mt-1.5 text-[10px] font-semibold text-gray-400 text-right">
+            Paso {state.step} de 3
+          </p>
+        </div>
+      )}
+
+      {/* Mini-resumen fijo del pedido (pasos 2-3) */}
+      {state.step > 1 && state.step < 4 && state.selectedService && (
+        <div className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-2xl border border-[#ECECEC] bg-[#F7F4EE] px-4 py-2.5 text-[11px] sm:text-xs">
+          <span className="font-bold text-[#1A1A1A]">{state.selectedService.nombre}</span>
+          {state.selectedSlot && (
+            <span className="text-[#6B6B6B] capitalize">
+              {format(new Date(state.selectedSlot), "EEE d MMM · HH:mm", { locale: es })} hrs
+            </span>
+          )}
+          <span className="text-[#6B6B6B]">· {state.selectedService.duracionMinutos} min</span>
+          <span className="ml-auto font-black text-[#2AA79C]">
+            {currency} {state.selectedService.precio.toFixed(0)}
+          </span>
         </div>
       )}
 

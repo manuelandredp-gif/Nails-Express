@@ -178,8 +178,8 @@ export default function TestimonialsManager({
 
       {items.length === 0 ? (
         <div className="bg-white rounded-2xl border border-[#ECECEC] p-10 text-center">
-          <MessageSquareQuote className="w-8 h-8 text-[#E26D9A] mx-auto mb-2" />
-          <p className="text-sm text-[#9B8890]">
+          <MessageSquareQuote className="w-8 h-8 text-[#3EA59E] mx-auto mb-2" />
+          <p className="text-sm text-[#8E8E8E]">
             Aún no hay testimonios. Agrega el primero.
           </p>
         </div>
@@ -196,7 +196,7 @@ export default function TestimonialsManager({
                 <div className="min-w-0">
                   <p className="font-bold text-[#1A1A1A] truncate">{t.nombre}</p>
                   {t.servicio && (
-                    <p className="text-[0.7rem] text-[#9B8890]">{t.servicio}</p>
+                    <p className="text-[0.7rem] text-[#8E8E8E]">{t.servicio}</p>
                   )}
                 </div>
                 <Stars value={t.estrellas} />
@@ -225,7 +225,7 @@ export default function TestimonialsManager({
                 </button>
                 <button
                   onClick={() => openEdit(t)}
-                  className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-[#E6D3DA] text-[#6B6B6B] hover:bg-gray-50 transition-colors"
+                  className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-[#E1F4F1] text-[#6B6B6B] hover:bg-gray-50 transition-colors"
                 >
                   <Pencil className="w-3.5 h-3.5" /> Editar
                 </button>
@@ -266,7 +266,7 @@ export default function TestimonialsManager({
                   onChange={(e) =>
                     setEditing({ ...editing, nombre: e.target.value })
                   }
-                  className="mt-1 w-full rounded-lg border border-[#E6D3DA] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#F3A6BC]"
+                  className="mt-1 w-full rounded-lg border border-[#E1F4F1] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#9FE0D9]"
                 />
               </label>
               <label className="block">
@@ -279,7 +279,7 @@ export default function TestimonialsManager({
                     setEditing({ ...editing, servicio: e.target.value })
                   }
                   placeholder="Ej. Manicure en gel"
-                  className="mt-1 w-full rounded-lg border border-[#E6D3DA] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#F3A6BC]"
+                  className="mt-1 w-full rounded-lg border border-[#E1F4F1] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#9FE0D9]"
                 />
               </label>
               <label className="block">
@@ -292,7 +292,7 @@ export default function TestimonialsManager({
                     setEditing({ ...editing, texto: e.target.value })
                   }
                   rows={4}
-                  className="mt-1 w-full rounded-lg border border-[#E6D3DA] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#F3A6BC]"
+                  className="mt-1 w-full rounded-lg border border-[#E1F4F1] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#9FE0D9]"
                 />
               </label>
               <div className="flex items-center justify-between">
@@ -311,7 +311,7 @@ export default function TestimonialsManager({
                   onChange={(e) =>
                     setEditing({ ...editing, visible: e.target.checked })
                   }
-                  className="w-4 h-4 accent-[#E26D9A]"
+                  className="w-4 h-4 accent-[#3EA59E]"
                 />
                 <span className="text-sm text-[#1A1A1A]">Mostrar en la web</span>
               </label>
@@ -320,7 +320,7 @@ export default function TestimonialsManager({
             <div className="px-5 py-4 border-t border-[#ECECEC] flex justify-end gap-2 sticky bottom-0 bg-white">
               <button
                 onClick={() => setEditing(null)}
-                className="text-sm py-2 px-4 rounded-lg border border-[#E6D3DA] text-[#6B6B6B] hover:bg-gray-50"
+                className="text-sm py-2 px-4 rounded-lg border border-[#E1F4F1] text-[#6B6B6B] hover:bg-gray-50"
               >
                 Cancelar
               </button>

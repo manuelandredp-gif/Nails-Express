@@ -1,6 +1,6 @@
 import React from "react";
 import { prisma } from "@/lib/db";
-import { getSiteSettings } from "@/lib/site-content";
+import { getSiteSettings, INSTAGRAM_CATEGORIA } from "@/lib/site-content";
 import GalleryGrid from "@/components/public/GalleryGrid";
 import type { Metadata } from "next";
 
@@ -14,7 +14,7 @@ export const revalidate = 60;
 export default async function GaleriaPage() {
   const [items, settings] = await Promise.all([
     prisma.galleryItem.findMany({
-      where: { visible: true },
+      where: { visible: true, categoria: { not: INSTAGRAM_CATEGORIA } },
       orderBy: { orden: "asc" },
     }),
     getSiteSettings(),
@@ -27,6 +27,7 @@ export default async function GaleriaPage() {
         showTitle={true}
         titulo={settings.galeriaTitulo}
         subtitulo={settings.galeriaSubtitulo}
+        marca={settings.nombreNegocio}
       />
     </div>
   );

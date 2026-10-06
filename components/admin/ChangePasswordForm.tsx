@@ -42,12 +42,12 @@ export default function ChangePasswordForm() {
   };
 
   const inputCls =
-    "mt-1 w-full rounded-lg border border-[#E6D3DA] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#F3A6BC]";
+    "mt-1 w-full rounded-lg border border-[#E1F4F1] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#9FE0D9]";
 
   return (
     <div className="bg-white rounded-2xl border border-[#ECECEC] shadow-sm overflow-hidden">
-      <div className="px-5 py-4 bg-gradient-to-r from-[#FDF2F6] to-[#F0FBFA] border-b border-[#F0D9E0] flex items-center gap-2">
-        <KeyRound className="w-5 h-5 text-[#E26D9A]" />
+      <div className="px-5 py-4 bg-gradient-to-r from-[#F0FAF9] to-[#F0FBFA] border-b border-[#F0D9E0] flex items-center gap-2">
+        <KeyRound className="w-5 h-5 text-[#3EA59E]" />
         <h2 className="font-bold text-[#1A1A1A]">Cambiar mi contraseña</h2>
       </div>
       <form onSubmit={handleSubmit} className="p-5 space-y-4">
@@ -66,7 +66,7 @@ export default function ChangePasswordForm() {
             <button
               type="button"
               onClick={() => setShow((v) => !v)}
-              className="absolute right-2 top-1/2 translate-y-[2px] text-[#9B8890]"
+              className="absolute right-2 top-1/2 translate-y-[2px] text-[#8E8E8E]"
               tabIndex={-1}
             >
               {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}

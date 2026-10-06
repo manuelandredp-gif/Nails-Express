@@ -22,7 +22,7 @@ export default function CtaBanner({
   return (
     <section className="py-14 sm:py-16">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#E26D9A] via-[#D85C8C] to-[#5CC6BF] px-6 py-12 sm:px-12 sm:py-14 text-center shadow-lg">
+        <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#3EA59E] via-[#3EA59E] to-[#5CC6BF] px-6 py-12 sm:px-12 sm:py-14 text-center shadow-lg">
           {/* brillos decorativos */}
           <div className="absolute -top-10 -left-10 w-44 h-44 rounded-full bg-white/15 blur-2xl" />
           <div className="absolute -bottom-12 -right-8 w-52 h-52 rounded-full bg-white/10 blur-2xl" />
@@ -38,7 +38,7 @@ export default function CtaBanner({
             <div className="pt-3 flex flex-wrap items-center justify-center gap-3">
               <Link
                 href="/reservar"
-                className="inline-flex items-center gap-2 bg-white text-[#C8455F] font-bold text-sm py-3.5 px-8 rounded-full shadow-md hover:shadow-lg hover:scale-[1.03] transition-all"
+                className="inline-flex items-center gap-2 bg-white text-[#2AA79C] font-bold text-sm py-3.5 px-8 rounded-full shadow-md hover:shadow-lg hover:scale-[1.03] transition-all"
               >
                 <CalendarCheck className="w-4 h-4" />
                 {boton}

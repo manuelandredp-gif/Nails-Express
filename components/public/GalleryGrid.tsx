@@ -16,13 +16,19 @@ interface GalleryGridProps {
   showTitle?: boolean;
   titulo?: string;
   subtitulo?: string;
+  marca?: string;
 }
+
+// Placeholder gris para el efecto "blur-up" mientras carga cada foto.
+const BLUR_DATA_URL =
+  "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCI+PHJlY3Qgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjRTdFMUQ2Ii8+PC9zdmc+";
 
 export default function GalleryGrid({
   items,
   showTitle = true,
   titulo = "Galería de inspiración",
   subtitulo = "Ideas reales, para uñas reales.",
+  marca,
 }: GalleryGridProps) {
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [activePhotoIndex, setActivePhotoIndex] = useState<number | null>(null);
@@ -108,8 +114,25 @@ export default function GalleryGrid({
                 alt={item.altText}
                 fill
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 280px"
+                placeholder="blur"
+                blurDataURL={BLUR_DATA_URL}
                 className="object-cover object-center group-hover:scale-108 transition-transform duration-500"
               />
+
+              {/* Etiqueta de categoría (#12) */}
+              {item.categoria && (
+                <span className="absolute top-2 left-2 z-10 text-[0.6rem] font-bold px-2 py-0.5 rounded-full bg-white/85 backdrop-blur-sm text-[#1A1A1A] shadow-xs">
+                  {item.categoria}
+                </span>
+              )}
+
+              {/* Marca de agua discreta (#11) */}
+              {marca && (
+                <span className="absolute bottom-2 right-2.5 z-10 text-[0.6rem] font-extrabold uppercase tracking-[0.18em] text-white/70 drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)] pointer-events-none select-none">
+                  {marca}
+                </span>
+              )}
+
               <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                 <span className="w-10 h-10 rounded-full bg-white/90 text-[#1A1A1A] flex items-center justify-center transform scale-90 group-hover:scale-100 transition-transform shadow-md">
                   <Eye className="w-5 h-5 text-primary" />

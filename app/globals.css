@@ -8,13 +8,17 @@
   --primary: #5CC6BF;
   --primary-hover: #4db5ae;
   --primary-light: #E6F6F4;
-  --blush: #F9E3E3;
-  --blush-light: #FBEDED;
-  --accent-rose: #E8707A;
-  --rose-deep: #E86B86;
-  --peach: #FBE3D2;
-  --lila: #B98BD9;
-  --lila-light: #F1E7FA;
+  /* Paleta de marca: celeste + perla + negro (sin rosa) */
+  --perla: #F1EDE6;
+  --perla-light: #F8F5F0;
+  --celeste-deep: #2AA79C;
+  --blush: #F1EDE6;        /* compat: antes rosa, ahora perla */
+  --blush-light: #F7F4EE;  /* compat: antes rosa claro, ahora perla claro */
+  --accent-rose: #3EA59E;  /* compat: antes rosa, ahora celeste oscuro */
+  --rose-deep: #46B8B0;    /* compat: antes rosa fuerte, ahora celeste */
+  --peach: #E9F6F4;
+  --lila: #3EA59E;
+  --lila-light: #E6F6F4;
   --gold: #C79A4E;
   --gold-light: #F8EFD9;
   --text-dark: #1A1A1A;
@@ -31,18 +35,57 @@
 body {
   font-family: var(--font-sans);
   color: var(--text-dark);
-  /* Fondo cálido con leves auras de color rosa/durazno/teal */
-  background-color: #FEF9FA;
+  /* Fondo con leves auras de celeste y perla (marca) */
+  background-color: #FBFAF7;
   background-image:
-    radial-gradient(60rem 40rem at 85% -10%, rgba(243, 166, 188, 0.18), transparent 60%),
-    radial-gradient(50rem 40rem at -10% 15%, rgba(92, 198, 191, 0.10), transparent 55%),
-    radial-gradient(55rem 45rem at 50% 120%, rgba(251, 227, 210, 0.22), transparent 60%);
+    radial-gradient(60rem 40rem at 85% -10%, rgba(92, 198, 191, 0.14), transparent 60%),
+    radial-gradient(50rem 40rem at -10% 15%, rgba(92, 198, 191, 0.08), transparent 55%),
+    radial-gradient(55rem 45rem at 50% 120%, rgba(241, 237, 230, 0.55), transparent 60%);
   background-attachment: fixed;
   margin: 0;
   padding: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* Movimiento sutil (Ken Burns) para la imagen del hero (#1 fallback) */
+@keyframes kenburns {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.08); }
+}
+.kenburns {
+  animation: kenburns 14s ease-in-out infinite alternate;
+}
+@media (prefers-reduced-motion: reduce) {
+  .kenburns { animation: none; }
+}
+
+/* Brillo suave que recorre los esmaltes glossy de la paleta (#8) */
+@keyframes color-sheen {
+  0% { transform: translateX(-120%) rotate(8deg); opacity: 0; }
+  20% { opacity: 0.85; }
+  60% { opacity: 0; }
+  100% { transform: translateX(120%) rotate(8deg); opacity: 0; }
+}
+.color-sheen::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 55%;
+  height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,0.85), transparent);
+  border-radius: inherit;
+  animation: color-sheen 4.5s ease-in-out infinite;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .color-sheen::after { animation: none; opacity: 0; }
+}
+
+/* Ocultar barra de scroll (carruseles) manteniendo el scroll funcional */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
 /* Custom scrollbars */
 ::-webkit-scrollbar {
@@ -115,9 +158,9 @@ body {
   left: 130%;
 }
 
-/* Variante de botón rosa (call to action cálido) */
+/* Variante de botón celeste profundo (call to action, antes "rosa") */
 .btn-rose {
-  background-image: linear-gradient(120deg, #F3A6BC 0%, #E86B86 60%, #E8707A 100%);
+  background-image: linear-gradient(120deg, #5CC6BF 0%, #3EA59E 60%, #2AA79C 100%);
   color: #FFFFFF;
   font-weight: 600;
   padding: 0.625rem 1.35rem;
@@ -128,15 +171,15 @@ body {
   gap: 0.5rem;
   transition: all 0.22s ease;
   border: 1px solid transparent;
-  box-shadow: 0 2px 10px rgba(232, 107, 134, 0.3);
+  box-shadow: 0 2px 10px rgba(42, 167, 156, 0.3);
 }
 .btn-rose:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 22px rgba(232, 107, 134, 0.42);
+  box-shadow: 0 8px 22px rgba(42, 167, 156, 0.42);
 }
 
 .btn-blush {
-  background-color: #F9E3E3;
+  background-color: #F1EDE6;
   color: #1A1A1A;
   font-weight: 600;
   padding: 0.55rem 1.25rem;
@@ -148,7 +191,7 @@ body {
   transition: all 0.2s ease;
 }
 .btn-blush:hover {
-  background-color: #F5D3D3;
+  background-color: #E7E1D6;
   transform: translateY(-1px);
 }
 
@@ -220,9 +263,9 @@ body {
    Más color y vida — utilidades globales
    ============================================================ */
 
-/* Título con degradé rosa → coral → lila */
+/* Título con degradé celeste → teal profundo → negro */
 .text-gradient {
-  background-image: linear-gradient(100deg, #E86B86 0%, #C8455F 45%, #B98BD9 100%);
+  background-image: linear-gradient(100deg, #5CC6BF 0%, #2AA79C 50%, #1A1A1A 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -236,13 +279,13 @@ body {
 
 /* Secciones con fondo alternado (dejan ver el aura del body) */
 .sec-blush {
-  background-image: linear-gradient(180deg, rgba(251, 225, 231, 0.55), rgba(255, 253, 253, 0.65));
+  background-image: linear-gradient(180deg, rgba(241, 237, 230, 0.7), rgba(255, 254, 252, 0.65));
 }
 .sec-peach {
-  background-image: linear-gradient(180deg, rgba(251, 227, 210, 0.45), rgba(255, 253, 251, 0.7));
+  background-image: linear-gradient(180deg, rgba(233, 246, 244, 0.5), rgba(255, 254, 253, 0.7));
 }
 .sec-mint {
-  background-image: linear-gradient(180deg, rgba(225, 244, 241, 0.6), rgba(255, 253, 253, 0.7));
+  background-image: linear-gradient(180deg, rgba(225, 244, 241, 0.6), rgba(255, 254, 253, 0.7));
 }
 
 /* Línea/divisor dorado sutil */
@@ -263,10 +306,10 @@ body {
   pointer-events: none;
   z-index: 0;
 }
-.blob-rose { background: #F3A6BC; }
+.blob-rose { background: #9FE0D9; }
 .blob-teal { background: #9FE0D9; }
-.blob-peach { background: #FBCDA8; }
-.blob-lila { background: #D9BCF0; }
+.blob-peach { background: #E9F0ED; }
+.blob-lila { background: #BDE7E2; }
 
 /* Aparición suave al hacer scroll (activada por IntersectionObserver) */
 .reveal {
@@ -286,8 +329,8 @@ body {
 }
 .card-lift:hover {
   transform: translateY(-5px);
-  box-shadow: 0 16px 34px rgba(200, 90, 120, 0.14);
-  border-color: rgba(232, 112, 122, 0.4);
+  box-shadow: 0 16px 34px rgba(46, 167, 156, 0.14);
+  border-color: rgba(62, 165, 158, 0.4);
 }
 
 /* Pulso para el botón flotante de WhatsApp */

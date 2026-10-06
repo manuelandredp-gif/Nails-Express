@@ -32,7 +32,7 @@ export default function BeforeAfter({
         </h2>
         <div
           ref={ref}
-          className="relative w-full aspect-[16/10] rounded-[20px] overflow-hidden shadow-sm border border-[#F4DBE0] select-none cursor-ew-resize"
+          className="relative w-full aspect-[16/10] rounded-[20px] overflow-hidden shadow-sm border border-[#CFEDEA] select-none cursor-ew-resize"
           onMouseDown={(e) => {
             dragging.current = true;
             move(e.clientX);
@@ -45,7 +45,7 @@ export default function BeforeAfter({
         >
           {/* Después (fondo) */}
           <Image src={despues} alt="Después" fill sizes="(max-width:768px) 100vw, 800px" className="object-cover" />
-          <span className="absolute bottom-3 right-3 text-[0.7rem] font-bold text-white bg-[#E86B86] px-2.5 py-1 rounded-full z-10">
+          <span className="absolute bottom-3 right-3 text-[0.7rem] font-bold text-white bg-[#46B8B0] px-2.5 py-1 rounded-full z-10">
             Después
           </span>
           {/* Antes (recortado) */}
@@ -59,12 +59,12 @@ export default function BeforeAfter({
           </div>
           {/* Divisor */}
           <div className="absolute top-0 bottom-0 w-0.5 bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.1)] z-20" style={{ left: `${pos}%` }}>
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white shadow-md flex items-center justify-center text-[#E86B86] font-bold">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white shadow-md flex items-center justify-center text-[#46B8B0] font-bold">
               ⇄
             </div>
           </div>
         </div>
-        <p className="text-center text-xs text-[#8A6B72] mt-3">Deslizá para ver la transformación</p>
+        <p className="text-center text-xs text-[#6B6B6B] mt-3">Deslizá para ver la transformación</p>
       </div>
     </section>
   );

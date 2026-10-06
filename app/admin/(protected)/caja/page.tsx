@@ -144,7 +144,7 @@ export default async function CajaPage() {
       value: money(cobradoMes),
       sub: `${paidMonth.length} cobros en el mes`,
       icon: CalendarDays,
-      grad: "from-[#E26D9A] to-[#C64E7E]",
+      grad: "from-[#3EA59E] to-[#2AA79C]",
     },
   ];
 
@@ -183,7 +183,7 @@ export default async function CajaPage() {
                 <p className="text-2xl font-extrabold text-[#1A1A1A] mt-2">
                   {k.value}
                 </p>
-                <p className="text-[0.7rem] text-[#9B8890] mt-0.5">{k.sub}</p>
+                <p className="text-[0.7rem] text-[#8E8E8E] mt-0.5">{k.sub}</p>
               </div>
             </div>
           );
@@ -195,12 +195,12 @@ export default async function CajaPage() {
         {/* Por manicurista */}
         <div className="bg-white rounded-2xl border border-[#ECECEC] shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b border-[#ECECEC] flex items-center gap-2">
-            <Users className="w-5 h-5 text-[#E26D9A]" />
+            <Users className="w-5 h-5 text-[#3EA59E]" />
             <h2 className="font-bold text-[#1A1A1A]">Por manicurista</h2>
-            <span className="ml-auto text-xs text-[#9B8890]">Últimos 7 días</span>
+            <span className="ml-auto text-xs text-[#8E8E8E]">Últimos 7 días</span>
           </div>
           {porManicurista.length === 0 ? (
-            <p className="p-6 text-center text-sm text-[#9B8890]">
+            <p className="p-6 text-center text-sm text-[#8E8E8E]">
               Sin cobros esta semana.
             </p>
           ) : (
@@ -217,7 +217,7 @@ export default async function CajaPage() {
                     <p className="text-sm font-semibold text-[#1A1A1A] truncate">
                       {nombre}
                     </p>
-                    <p className="text-[0.7rem] text-[#9B8890]">
+                    <p className="text-[0.7rem] text-[#8E8E8E]">
                       {d.count} {d.count === 1 ? "cita cobrada" : "citas cobradas"}
                     </p>
                   </div>
@@ -235,10 +235,10 @@ export default async function CajaPage() {
           <div className="px-5 py-4 border-b border-[#ECECEC] flex items-center gap-2">
             <CreditCard className="w-5 h-5 text-[#5CC6BF]" />
             <h2 className="font-bold text-[#1A1A1A]">Por método de pago</h2>
-            <span className="ml-auto text-xs text-[#9B8890]">Últimos 7 días</span>
+            <span className="ml-auto text-xs text-[#8E8E8E]">Últimos 7 días</span>
           </div>
           {porMetodo.length === 0 ? (
-            <p className="p-6 text-center text-sm text-[#9B8890]">
+            <p className="p-6 text-center text-sm text-[#8E8E8E]">
               Sin cobros esta semana.
             </p>
           ) : (
@@ -263,20 +263,20 @@ export default async function CajaPage() {
         <div className="px-5 py-4 border-b border-[#ECECEC] flex items-center gap-2">
           <CheckCircle2 className="w-5 h-5 text-[#5CC6BF]" />
           <h2 className="font-bold text-[#1A1A1A]">Movimientos de hoy</h2>
-          <span className="ml-auto text-xs text-[#9B8890]">
+          <span className="ml-auto text-xs text-[#8E8E8E]">
             {todayAppts.length} citas
           </span>
         </div>
 
         {todayAppts.length === 0 ? (
-          <p className="p-6 text-center text-sm text-[#9B8890]">
+          <p className="p-6 text-center text-sm text-[#8E8E8E]">
             No hay citas para hoy.
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-[0.7rem] uppercase tracking-wide text-[#9B8890] border-b border-[#F3F3F3]">
+                <tr className="text-left text-[0.7rem] uppercase tracking-wide text-[#8E8E8E] border-b border-[#F3F3F3]">
                   <th className="px-5 py-2.5 font-semibold">Hora</th>
                   <th className="px-3 py-2.5 font-semibold">Cliente</th>
                   <th className="px-3 py-2.5 font-semibold">Servicio</th>
@@ -331,7 +331,7 @@ export default async function CajaPage() {
         )}
       </div>
 
-      <p className="text-[0.7rem] text-[#9B8890] px-1">
+      <p className="text-[0.7rem] text-[#8E8E8E] px-1">
         El cobro se registra desde <strong>Citas</strong> con el botón «Cobrar»,
         eligiendo el método de pago. La caja usa la fecha y hora reales de cada cobro.
       </p>

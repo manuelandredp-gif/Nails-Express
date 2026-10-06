@@ -75,7 +75,7 @@ export default async function ConfirmacionPage({
       </div>
 
       {/* Blush Pink 3-Column Strip (Matching Image 06 exactly) */}
-      <div className="bg-[#FBEDED] rounded-[18px] p-6 sm:p-8 border border-[#F5D8D8] grid grid-cols-1 md:grid-cols-3 gap-6 text-left items-center">
+      <div className="bg-[#E6F6F4] rounded-[18px] p-6 sm:p-8 border border-[#CFEDEA] grid grid-cols-1 md:grid-cols-3 gap-6 text-left items-center">
         {/* Column 1: Date & Time */}
         <div className="flex items-center space-x-3.5">
           <div className="w-10 h-10 rounded-full bg-white/90 text-[#1A1A1A] flex items-center justify-center shrink-0 shadow-xs">
@@ -94,7 +94,7 @@ export default async function ConfirmacionPage({
         </div>
 
         {/* Column 2: Service & Price */}
-        <div className="flex items-center space-x-3.5 border-y md:border-y-0 md:border-x border-[#F0D0D0] py-4 md:py-0 md:px-4">
+        <div className="flex items-center space-x-3.5 border-y md:border-y-0 md:border-x border-[#CFEDEA] py-4 md:py-0 md:px-4">
           <div className="w-10 h-10 rounded-full bg-white/90 text-[#1A1A1A] flex items-center justify-center shrink-0 shadow-xs">
             <Scissors className="w-5 h-5 text-[#1A1A1A]" strokeWidth={1.5} />
           </div>
@@ -102,7 +102,7 @@ export default async function ConfirmacionPage({
             <p className="text-sm font-bold text-[#1A1A1A]">
               {appointment.service.nombre}
             </p>
-            <p className="text-xs text-[#E8707A] font-semibold">
+            <p className="text-xs text-[#3EA59E] font-semibold">
               {settings.moneda} {appointment.precio.toFixed(0)}
             </p>
           </div>

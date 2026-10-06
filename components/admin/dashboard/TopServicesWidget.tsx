@@ -35,7 +35,7 @@ export default function TopServicesWidget({ topServices }: TopServicesWidgetProp
         </div>
       </div>
 
-      <div className="bg-[#FAF3F3] rounded-[18px] border border-[#F2DADA] p-6 space-y-3">
+      <div className="bg-[#F8F5F0] rounded-[18px] border border-[#E1F4F1] p-6 space-y-3">
         <h3 className="text-base font-bold text-[#1A1A1A]">
           Reglas de Agendamiento
         </h3>

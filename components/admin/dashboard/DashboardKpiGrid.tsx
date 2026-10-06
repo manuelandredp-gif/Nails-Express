@@ -116,13 +116,13 @@ export default function DashboardKpiGrid({
       </div>
 
       {/* Card 4: Tasa de Inasistencia */}
-      <div className="bg-gradient-to-br from-[#FBEDED] to-white p-5 rounded-[18px] border border-[#F3D6D6] shadow-2xs space-y-3 relative overflow-hidden">
-        <span className="absolute top-0 left-0 right-0 h-1 bg-[#E8707A]" />
+      <div className="bg-gradient-to-br from-[#E6F6F4] to-white p-5 rounded-[18px] border border-[#CFEDEA] shadow-2xs space-y-3 relative overflow-hidden">
+        <span className="absolute top-0 left-0 right-0 h-1 bg-[#3EA59E]" />
         <div className="flex items-center justify-between text-[#8E8E8E]">
           <span className="text-xs font-semibold uppercase tracking-wider">
             Inasistencia
           </span>
-          <div className="w-7 h-7 rounded-lg bg-rose-50 text-[#E8707A] flex items-center justify-center">
+          <div className="w-7 h-7 rounded-lg bg-[#E6F6F4] text-[#3EA59E] flex items-center justify-center">
             <AlertTriangle className="w-4 h-4" />
           </div>
         </div>

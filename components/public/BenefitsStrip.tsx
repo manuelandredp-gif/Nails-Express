@@ -3,11 +3,11 @@ import { Sparkles, Gem, Heart, Clock, Star, ShieldCheck } from "lucide-react";
 
 const ICONS = [Sparkles, Gem, Heart, Clock, Star, ShieldCheck];
 const TINTS = [
-  "bg-[#FBE1E7] text-[#C8455F]",
+  "bg-[#E6F6F4] text-[#2AA79C]",
   "bg-[#E1F4F1] text-[#0E736A]",
-  "bg-[#F1E7FA] text-[#8E5BC0]",
+  "bg-[#E6F6F4] text-[#3EA59E]",
   "bg-[#FBEFD9] text-[#B98F3E]",
-  "bg-[#FDE8DC] text-[#C56A3A]",
+  "bg-[#F8F5F0] text-[#C56A3A]",
   "bg-[#E7ECFB] text-[#4E63C4]",
 ];
 
